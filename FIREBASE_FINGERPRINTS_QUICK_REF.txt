@@ -1,0 +1,71 @@
+═══════════════════════════════════════════════════════════════════════════════
+  FIREBASE FINGERPRINTS - QUICK REFERENCE
+═══════════════════════════════════════════════════════════════════════════════
+
+🔗 Firebase Console URL:
+https://console.firebase.google.com/project/pashumitra-80c14/settings/general
+
+📱 App Package Name:
+com.example.pashu_mitra
+
+───────────────────────────────────────────────────────────────────────────────
+  DEBUG KEYSTORE (for development/testing)
+───────────────────────────────────────────────────────────────────────────────
+
+SHA-1:
+64:D8:EB:CB:B0:41:6E:28:7D:FA:DA:A4:5F:6B:62:35:FA:C1:DD:06
+
+SHA-256:
+95:B2:9C:AD:3F:0C:97:0B:DE:5C:75:2D:76:75:98:C1:7D:52:33:CF:EC:60:82:62:9A:D7:83:FE:65:23:33:94
+
+───────────────────────────────────────────────────────────────────────────────
+  RELEASE KEYSTORE (for production)
+───────────────────────────────────────────────────────────────────────────────
+
+SHA-1:
+F2:0C:55:91:82:BB:AF:E3:C5:7F:74:96:8E:8A:0B:F7:B3:94:64:13
+
+SHA-256:
+1A:BE:91:DC:11:88:31:14:D3:08:E0:8C:40:55:73:30:57:F4:F0:8B:EB:28:F3:A3:68:06:03:C8:13:CB:C8:8A
+
+───────────────────────────────────────────────────────────────────────────────
+  KEYSTORE INFO
+───────────────────────────────────────────────────────────────────────────────
+
+Location: android/app/upload-keystore.jks
+Alias: upload
+Password: pashumitra2024
+
+⚠️  BACKUP THIS FILE! If lost, you cannot update your app on Play Store!
+
+───────────────────────────────────────────────────────────────────────────────
+  STEPS TO ADD TO FIREBASE
+───────────────────────────────────────────────────────────────────────────────
+
+1. Open Firebase Console (URL above)
+2. Scroll to "Your apps" → Find "com.example.pashu_mitra"
+3. Click "Add fingerprint" button
+4. Add ALL 4 fingerprints (2 SHA-1 + 2 SHA-256)
+5. Click "Save" after each one
+6. Go to Authentication → Sign-in method → Phone
+7. Enable SafetyNet and reCAPTCHA
+8. Download updated google-services.json
+9. Replace android/app/google-services.json
+
+───────────────────────────────────────────────────────────────────────────────
+  BUILD COMMANDS
+───────────────────────────────────────────────────────────────────────────────
+
+APK (for direct install):
+flutter build apk --release
+
+App Bundle (for Play Store):
+flutter build appbundle --release
+
+Install APK:
+flutter install
+
+Check logs:
+flutter logs
+
+═══════════════════════════════════════════════════════════════════════════════
