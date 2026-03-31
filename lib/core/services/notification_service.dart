@@ -2,6 +2,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:dio/dio.dart';
+import '../constants/api_endpoints.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._();
@@ -239,7 +240,7 @@ class NotificationService {
       dio.options.headers['Content-Type'] = 'application/json; charset=utf-8';
 
       await dio.put(
-        'https://pashumitra-production-4bb3.up.railway.app/api/auth/profile',
+        '${ApiEndpoints.baseUrl}${ApiEndpoints.profile}',
         data: {'fcmToken': fcmToken},
       );
 

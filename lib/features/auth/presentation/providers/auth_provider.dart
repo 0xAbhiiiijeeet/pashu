@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import '../../../../core/error/app_exception.dart';
+import '../../../../core/network/dio_client.dart';
 import '../../../../core/storage/storage_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/firebase_auth_service.dart';
@@ -15,7 +16,7 @@ class AuthProvider extends ChangeNotifier {
   UserModel? _user;
   String? _errorMessage;
   String? _firebaseVerificationId; // for Firebase auth
-  bool _useFirebaseAuth = true; // Toggle Firebase on/off
+  final bool _useFirebaseAuth = true; // Toggle Firebase on/off
 
   AuthProvider(this._dataSource, this._storageService);
 
@@ -87,6 +88,7 @@ class AuthProvider extends ChangeNotifier {
     }
 
     if (token != null && userData != null) {
+      DioClient.instance.setAuthToken(token);
       debugPrint('🔄 Creating UserModel from JSON...');
       try {
         _user = UserModel.fromJson(userData);
@@ -224,11 +226,15 @@ class AuthProvider extends ChangeNotifier {
       // Fallback to hardcoded OTP verification
       debugPrint('📱 Using hardcoded OTP verification');
       final result = await _dataSource.verifyOtp(phoneNumber, otp);
-      final token = result['token'] as String;
-      final userData = result['user'] as Map<String, dynamic>;
+      final dataObj = result.containsKey('data') ? result['data'] as Map<String, dynamic> : result;
+      final token = dataObj['token'] as String;
+      final userData = dataObj['user'] as Map<String, dynamic>;
+      debugPrint('✅ Parsed verify-otp token length: ${token.length}');
+      debugPrint('✅ Parsed verify-otp user keys: ${userData.keys.toList()}');
 
       // Save token securely
       await _storageService.saveToken(token);
+      DioClient.instance.setAuthToken(token);
       
       // Save refresh token if available
       if (result.containsKey('refreshToken')) {
@@ -293,11 +299,15 @@ class AuthProvider extends ChangeNotifier {
       
       // Verify token with backend
       final result = await _dataSource.verifyFirebaseToken(idToken);
-      final token = result['token'] as String;
-      final userData = result['user'] as Map<String, dynamic>;
+      final dataObj = result.containsKey('data') ? result['data'] as Map<String, dynamic> : result;
+      final token = dataObj['token'] as String;
+      final userData = dataObj['user'] as Map<String, dynamic>;
+      debugPrint('✅ Parsed verify-firebase-token token length: ${token.length}');
+      debugPrint('✅ Parsed verify-firebase-token user keys: ${userData.keys.toList()}');
 
       // Save token securely
       await _storageService.saveToken(token);
+      DioClient.instance.setAuthToken(token);
       
       // Save refresh token if available
       if (result.containsKey('refreshToken')) {
@@ -528,6 +538,7 @@ class AuthProvider extends ChangeNotifier {
     await _storageService.clearAuthCache();
     await _storageService.clearOnboardingCache();
     await _storageService.saveAuthStatus('logged_out');
+    DioClient.instance.clearAuthToken();
     
     _user = null;
     _status = 'unauthenticated';
@@ -608,6 +619,22 @@ class AuthProvider extends ChangeNotifier {
   }
 
   String _extractDioError(DioException e) {
+    if (e.type == DioExceptionType.badResponse) {
+      final statusCode = e.response?.statusCode;
+      final responseData = e.response?.data as Map<String, dynamic>?;
+      final message = responseData?['message'] as String?;
+      
+      if (statusCode == 400 && message == 'Invalid OTP') {
+        return 'The OTP you entered is incorrect. Please check and try again.';
+      }
+      if (statusCode == 401) {
+        return 'Your session has expired. Please login again.';
+      }
+      if (statusCode == 403) {
+        return 'You need an active subscription to use this feature. Please go to Profile → Subscription to complete your payment.';
+      }
+    }
+
     if (e.error is AppException) {
       return (e.error as AppException).message;
     }
@@ -623,19 +650,8 @@ class AuthProvider extends ChangeNotifier {
         return 'Please check your internet connection and try again.';
       
       case DioExceptionType.badResponse:
-        final statusCode = e.response?.statusCode;
         final responseData = e.response?.data as Map<String, dynamic>?;
         final message = responseData?['message'] as String?;
-        
-        if (statusCode == 400 && message == 'Invalid OTP') {
-          return 'The OTP you entered is incorrect. Please check and try again.';
-        }
-        if (statusCode == 401) {
-          return 'Your session has expired. Please login again.';
-        }
-        if (statusCode == 403) {
-          return 'You need an active subscription to use this feature. Please go to Profile → Subscription to complete your payment.';
-        }
         return message ?? 'We\'re having trouble connecting to our servers. Please try again.';
       
       case DioExceptionType.cancel:

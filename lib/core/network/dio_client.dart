@@ -28,8 +28,9 @@ class DioClient {
           'Accept': 'application/json',
         },
         validateStatus: (status) {
-          // Accept all status codes to prevent Dio from throwing on non-200
-          return status != null && status < 500;
+          // Standard validation: throw DioException on non-2xx responses
+          // so error interceptors and providers can catch them
+          return status != null && status >= 200 && status < 300;
         },
         followRedirects: false, // Disable redirects to avoid issues
         maxRedirects: 0,
@@ -43,6 +44,14 @@ class DioClient {
       ErrorInterceptor(),
       if (kDebugMode) LoggingInterceptor(),
     ]);
+  }
+
+  void setAuthToken(String token) {
+    _dio.options.headers['Authorization'] = 'Bearer $token';
+  }
+
+  void clearAuthToken() {
+    _dio.options.headers.remove('Authorization');
   }
 
   // ── GET ──────────────────────────────────────────────────────────────────

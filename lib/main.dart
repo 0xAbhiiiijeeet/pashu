@@ -1,12 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
 
 import 'app/router/app_router.dart';
+import 'core/localization/app_localizations.dart';
+import 'core/localization/locale_provider.dart';
 import 'core/network/dio_client.dart';
 import 'core/providers/remote_config_provider.dart';
 import 'core/providers/settings_provider.dart';
@@ -15,70 +17,40 @@ import 'core/services/notification_service.dart';
 import 'core/services/remote_config_service.dart';
 import 'core/storage/storage_service.dart';
 import 'core/theme/app_theme.dart';
-import 'core/localization/app_localizations.dart';
-import 'core/localization/locale_provider.dart';
 import 'features/auth/data/datasources/auth_remote_datasource.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/bookings/data/datasources/bookings_remote_datasource.dart';
 import 'features/bookings/presentation/providers/bookings_provider.dart';
 import 'features/home/presentation/screens/home_screen.dart';
+import 'features/marketplace/data/datasources/marketplace_remote_datasource.dart';
+import 'features/marketplace/presentation/providers/marketplace_provider.dart';
+import 'features/milk/presentation/providers/milk_provider.dart';
+import 'features/milk_calculator/data/datasources/milk_calculator_remote_datasource.dart';
+import 'features/milk_calculator/presentation/providers/milk_calculator_provider.dart';
 import 'features/posts/data/datasources/posts_remote_datasource.dart';
 import 'features/posts/presentation/providers/posts_provider.dart';
 import 'features/problems/data/datasources/problems_remote_datasource.dart';
 import 'features/problems/presentation/providers/problems_provider.dart';
 import 'features/questions/data/datasources/questions_remote_datasource.dart';
 import 'features/questions/presentation/providers/questions_provider.dart';
-import 'features/marketplace/data/datasources/marketplace_remote_datasource.dart';
-import 'features/marketplace/presentation/providers/marketplace_provider.dart';
-import 'features/milk_calculator/data/datasources/milk_calculator_remote_datasource.dart';
-import 'features/milk_calculator/presentation/providers/milk_calculator_provider.dart';
-import 'features/milk/presentation/providers/milk_provider.dart';
 import 'features/splash/presentation/screens/splash_screen.dart';
+import 'firebase_options.dart';
 import 'shared/widgets/force_update_wrapper.dart';
 import 'shared/widgets/maintenance_wrapper.dart';
-import 'firebase_options.dart';
 
-// Global navigator key for programmatic navigation
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-// Background message handler
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  debugPrint('📱 Background message: ${message.notification?.title}');
+  debugPrint('Background message: ${message.notification?.title}');
 }
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  debugPrint('Starting app bootstrap...');
 
-  // Initialize Firebase with timeout
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    ).timeout(
-      const Duration(seconds: 15),
-    );
-    debugPrint('✅ Firebase initialized successfully');
-  } catch (e) {
-    debugPrint('⚠️ Firebase init timeout or failed: $e');
-    // Continue anyway - app might work without Firebase
-  }
-
-  // Initialize Remote Config
-  try {
-    await RemoteConfigService.instance.initialize().timeout(
-      const Duration(seconds: 10),
-    );
-  } catch (e) {
-    debugPrint('⚠️ Remote Config init timeout or failed: $e');
-    // Continue with default values
-  }
-  
-  // Set background message handler
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-  // System UI overlay
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -87,39 +59,65 @@ Future<void> main() async {
     ),
   );
 
-  // Lock portrait orientation
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
-  // Init storage with timeout to prevent hang
   const secureStorage = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
   final storageService = StorageService(secureStorage);
+
   try {
-    await storageService.init().timeout(
-      const Duration(seconds: 10),
-    );
+    await storageService.init().timeout(const Duration(seconds: 5));
+    debugPrint('Storage initialized successfully');
   } catch (e) {
-    debugPrint('⚠️ Storage init timeout or failed: $e');
-    // Continue anyway - SharedPreferences might still work
+    debugPrint('Storage init timeout or failed: $e');
   }
 
-  // Init Dio
   DioClient.instance.init(storageService);
-  
-  // Initialize notifications with timeout
-  try {
-    await NotificationService.instance.initialize().timeout(
-      const Duration(seconds: 10),
-    );
-  } catch (e) {
-    debugPrint('⚠️ Notification init timeout or failed: $e');
-  }
 
   runApp(PashuMitraApp(storageService: storageService));
+
+  _initializeBackgroundServices();
+}
+
+Future<void> _initializeBackgroundServices() async {
+  debugPrint('Starting background service initialization...');
+
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    ).timeout(const Duration(seconds: 10));
+    debugPrint('Firebase initialized successfully');
+  } catch (e) {
+    debugPrint('Firebase init timeout or failed: $e');
+  }
+
+  try {
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  } catch (e) {
+    debugPrint('Firebase background handler setup failed: $e');
+  }
+
+  try {
+    await RemoteConfigService.instance.initialize().timeout(
+      const Duration(seconds: 8),
+    );
+    debugPrint('Remote Config initialized successfully');
+  } catch (e) {
+    debugPrint('Remote Config init timeout or failed: $e');
+  }
+
+  try {
+    await NotificationService.instance.initialize().timeout(
+      const Duration(seconds: 8),
+    );
+    debugPrint('Notification service initialized successfully');
+  } catch (e) {
+    debugPrint('Notification init timeout or failed: $e');
+  }
 }
 
 class PashuMitraApp extends StatelessWidget {
@@ -198,7 +196,7 @@ class _AppView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final localeProvider = context.watch<LocaleProvider>();
-    
+
     return MaintenanceWrapper(
       child: ForceUpdateWrapper(
         child: MaterialApp(
@@ -222,28 +220,24 @@ class _AppView extends StatelessWidget {
   }
 }
 
-// Auth gate that rebuilds when auth state changes
 class _AuthGate extends StatelessWidget {
   const _AuthGate();
 
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
-    
-    // Show splash during initialization
-    if (authProvider.status == 'initial' ||
-        authProvider.status == 'loading') {
+
+    if (authProvider.status == 'initial' || authProvider.status == 'loading') {
       return const SplashScreen();
     }
-    
-    // Show login if unauthenticated
+
     if (authProvider.status == 'unauthenticated') {
       return const LoginScreen();
     }
-    
-    // Show home if authenticated
+
     return const HomeScreen();
   }
 }
+
 
 

@@ -59,7 +59,7 @@ class _ProfileFormState extends State<ProfileForm> {
     _selectedWork = widget.user.profileDetails?.work;
     _selectedEducation = widget.user.profileDetails?.education;
     
-    // Experience is stored as string in backend, use directly
+    // Experience is stored as string in backend; normalize later for UI options
     _selectedExperience = widget.user.profileDetails?.experienceYears;
     
     // Initialize birthday
@@ -288,6 +288,7 @@ class _ProfileFormState extends State<ProfileForm> {
     String? mappedLanguage = _selectedLanguage;
     String? mappedWork = _selectedWork;
     String? mappedEducation = _selectedEducation;
+    String? mappedExperience = _mapExperienceToDisplay(_selectedExperience);
     
     // If stored value doesn't exist in current options, clear it
     if (mappedLanguage != null && !languageOptions.contains(mappedLanguage)) {
@@ -298,6 +299,9 @@ class _ProfileFormState extends State<ProfileForm> {
     }
     if (mappedEducation != null && !educationOptions.contains(mappedEducation)) {
       mappedEducation = null;
+    }
+    if (mappedExperience != null && !experienceOptions.contains(mappedExperience)) {
+      mappedExperience = null;
     }
     
     return Form(
@@ -608,7 +612,7 @@ class _ProfileFormState extends State<ProfileForm> {
             // Experience
             _buildLabel(l10n.experience),
             _buildDropdown(
-              value: _selectedExperience,
+              value: mappedExperience,
               hint: l10n.experienceHint,
               items: experienceOptions,
               onChanged: (v) => setState(() => _selectedExperience = v),
@@ -947,6 +951,44 @@ class _ProfileFormState extends State<ProfileForm> {
       // English display values are already backend values
       debugPrint('✅ English mode, using value as-is: "$displayValue"');
       return displayValue;
+    }
+  }
+
+  String? _mapExperienceToDisplay(String? storedValue) {
+    if (storedValue == null || storedValue.isEmpty) return null;
+
+    final l10n = AppLocalizations.of(context);
+
+    if (l10n.isHindi) {
+      switch (storedValue) {
+        case '0-5 Years':
+          return '0-5 साल';
+        case '5-10 Years':
+          return '5-10 साल';
+        case '10-15 Years':
+          return '10-15 साल';
+        case '15-20 Years':
+          return '15-20 साल';
+        case '20+ Years':
+          return '20+ साल';
+        default:
+          return storedValue;
+      }
+    }
+
+    switch (storedValue) {
+      case '0-5 साल':
+        return '0-5 Years';
+      case '5-10 साल':
+        return '5-10 Years';
+      case '10-15 साल':
+        return '10-15 Years';
+      case '15-20 साल':
+        return '15-20 Years';
+      case '20+ साल':
+        return '20+ Years';
+      default:
+        return storedValue;
     }
   }
 }

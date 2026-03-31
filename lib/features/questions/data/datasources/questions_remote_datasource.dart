@@ -57,4 +57,18 @@ class QuestionsRemoteDataSource {
         .map((e) => CommentModel.fromJson(e as Map<String, dynamic>))
         .toList();
   }
+
+  /// PUT /api/questions/:id/answer
+  Future<QuestionModel> answerQuestion({
+    required String questionId,
+    required String text,
+  }) async {
+    final response = await _dioClient.put(
+      ApiEndpoints.questionAnswer(questionId),
+      data: {'text': text},
+    );
+    final data = response.data as Map<String, dynamic>;
+    final questionData = data['data'] as Map<String, dynamic>;
+    return QuestionModel.fromJson(questionData);
+  }
 }

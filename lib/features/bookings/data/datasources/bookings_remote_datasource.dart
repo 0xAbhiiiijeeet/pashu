@@ -110,4 +110,28 @@ class BookingsRemoteDataSource {
         .map((e) => BookingModel.fromJson(e as Map<String, dynamic>))
         .toList();
   }
+
+  /// GET /api/bookings/admin/all
+  Future<List<BookingModel>> getAllBookingsForAdmin() async {
+    final response = await _dioClient.get(ApiEndpoints.adminBookings);
+    final data = response.data as Map<String, dynamic>;
+    final list = data['data'] as List<dynamic>;
+    return list
+        .map((e) => BookingModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// PUT /api/bookings/:id/status
+  Future<BookingModel> updateBookingStatus({
+    required String bookingId,
+    required String status,
+  }) async {
+    final response = await _dioClient.put(
+      ApiEndpoints.bookingStatus(bookingId),
+      data: {'status': status},
+    );
+    final data = response.data as Map<String, dynamic>;
+    final bookingData = data['data'] as Map<String, dynamic>;
+    return BookingModel.fromJson(bookingData);
+  }
 }

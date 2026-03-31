@@ -71,6 +71,12 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _preloadBookings() async {
     try {
+      final authProvider = context.read<AuthProvider>();
+      if (!authProvider.isAuthenticated) {
+        debugPrint('⚠️ Skipping bookings preload until authentication completes');
+        return;
+      }
+
       final provider = context.read<BookingsProvider>();
       provider.loadBookedFromCacheSync();
       await provider.fetchBooked();

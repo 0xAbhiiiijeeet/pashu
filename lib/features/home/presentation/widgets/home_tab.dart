@@ -238,7 +238,7 @@ class _WideChip extends StatelessWidget {
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(38),
                       child: CachedNetworkImage(
-                        imageUrl: 'https://pashumitra-production-4bb3.up.railway.app${problem.image}',
+                        imageUrl: '${ApiEndpoints.baseUrl}${problem.image}',
                         width: 62,
                         height: 62,
                         fit: BoxFit.cover,

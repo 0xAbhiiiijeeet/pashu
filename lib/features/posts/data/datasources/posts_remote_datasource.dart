@@ -6,6 +6,28 @@ class PostsRemoteDataSource {
 
   PostsRemoteDataSource(this._dio);
 
+  Future<PostModel> createPost({
+    required String question,
+    required String answer,
+    String? category,
+    String? askedByName,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/api/posts',
+        data: {
+          'question': question,
+          'answer': answer,
+          if (category != null) 'category': category,
+          if (askedByName != null) 'askedByName': askedByName,
+        },
+      );
+      return PostModel.fromJson(response.data['data'] as Map<String, dynamic>);
+    } catch (e) {
+      throw Exception('Unable to create post. Please try again.');
+    }
+  }
+
   Future<List<PostModel>> getPosts() async {
     try {
       final response = await _dio.get('/api/posts');
@@ -43,6 +65,32 @@ class PostsRemoteDataSource {
       return comments.map((json) => CommentModel.fromJson(json as Map<String, dynamic>)).toList();
     } catch (e) {
       throw Exception('Unable to add comment. Please try again.');
+    }
+  }
+
+  Future<PostModel> updatePost(
+    String postId, {
+    String? category,
+  }) async {
+    try {
+      final response = await _dio.put(
+        '/api/posts/$postId',
+        data: {
+          if (category != null) 'category': category,
+        },
+      );
+      return PostModel.fromJson(response.data['data'] as Map<String, dynamic>);
+    } catch (e) {
+      throw Exception('Unable to update post. Please try again.');
+    }
+  }
+
+  Future<Map<String, dynamic>> deletePost(String postId) async {
+    try {
+      final response = await _dio.delete('/api/posts/$postId');
+      return response.data as Map<String, dynamic>;
+    } catch (e) {
+      throw Exception('Unable to delete post. Please try again.');
     }
   }
 }

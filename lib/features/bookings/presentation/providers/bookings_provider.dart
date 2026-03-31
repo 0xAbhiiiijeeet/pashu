@@ -150,6 +150,15 @@ class BookingsProvider extends ChangeNotifier {
 
   // ── Fetch Booked ──────────────────────────────────────────────────────────
   Future<void> fetchBooked() async {
+    final token = await _storageService.getToken();
+    if (token == null || token.isEmpty) {
+      debugPrint('⚠️ Skipping booked calls fetch: no auth token available yet');
+      _status = 'loaded';
+      _errorMessage = null;
+      notifyListeners();
+      return;
+    }
+
     _setLoading();
     try {
       _booked = await _dataSource.getBookedCalls();

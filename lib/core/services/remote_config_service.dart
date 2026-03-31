@@ -12,8 +12,7 @@ class RemoteConfigService {
   bool _initialized = false;
 
   // Default values
-  static const String _defaultBaseUrl =
-      'https://pashumitra-production-4bb3.up.railway.app';
+  static const String _defaultBaseUrl = 'https://4wtzlrjn-5000.inc1.devtunnels.ms/';
   static const String _defaultAppUrl =
       'https://drive.google.com/file/d/1PpHB8_I07gNTKj-j0DII9JEJ5lThZ-a4/view?usp=drive_link';
 
@@ -96,8 +95,7 @@ class RemoteConfigService {
       return _defaultBaseUrl;
     }
 
-    final url = _remoteConfig!.getString(_baseUrlKey);
-    return url.isNotEmpty ? url : _defaultBaseUrl;
+    return _defaultBaseUrl;
   }
 
   /// Get app URL for sharing
