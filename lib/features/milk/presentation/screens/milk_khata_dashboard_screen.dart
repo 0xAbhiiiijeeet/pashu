@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../core/constants/app_colors.dart';
-import '../widgets/milk_summary_card.dart';
-import '../widgets/milk_entry_tile.dart';
-import '../widgets/common_widgets.dart';
 import '../providers/milk_provider.dart';
+import '../widgets/common_widgets.dart';
+import '../widgets/milk_entry_tile.dart';
+import '../widgets/milk_summary_card.dart';
 import 'add_customer_screen.dart';
 import 'add_milk_entry_screen.dart';
 
@@ -30,31 +31,25 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
     });
   }
 
-  void _navigateToAddCustomer() async {
-    final result = await Navigator.push(
+  Future<void> _navigateToAddCustomer() async {
+    final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
-        builder: (context) => const AddCustomerScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const AddCustomerScreen()),
     );
-    
-    // Refresh data if customer was added
+
     if (result == true && mounted) {
-      context.read<MilkProvider>().init();
+      await context.read<MilkProvider>().init();
     }
   }
 
-  void _navigateToAddMilkEntry() async {
-    final result = await Navigator.push(
+  Future<void> _navigateToAddMilkEntry() async {
+    final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
-        builder: (context) => const AddMilkEntryScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const AddMilkEntryScreen()),
     );
-    
-    // Refresh data if entry was added
+
     if (result == true && mounted) {
-      context.read<MilkProvider>().init();
+      await context.read<MilkProvider>().fetchEntriesForDate(_selectedDate);
     }
   }
 
@@ -81,22 +76,7 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
       ),
       body: Consumer<MilkProvider>(
         builder: (context, milkProvider, child) {
-          // Handle loading and error states first
-          if (milkProvider.status == 'initial') {
-            // Trigger initialization if not already started
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (milkProvider.status == 'initial') {
-                milkProvider.init();
-              }
-            });
-            return const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-              ),
-            );
-          }
-
-          if (milkProvider.isLoading) {
+          if (milkProvider.status == 'initial' || milkProvider.isLoading) {
             return const Center(
               child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
@@ -133,13 +113,14 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
             );
           }
 
-          final todayEntries = milkProvider.getEntriesForDate(_selectedDate);
+          final dayEntries = milkProvider.getEntriesForDate(_selectedDate);
           final summary = milkProvider.getSummaryForDate(_selectedDate);
-
-          // Ensure summary has valid values
           final customerCount = summary['customerCount'] as int? ?? 0;
           final totalCow = (summary['totalCow'] as num?)?.toDouble() ?? 0.0;
-          final totalBuffalo = (summary['totalBuffalo'] as num?)?.toDouble() ?? 0.0;
+          final totalBuffalo =
+              (summary['totalBuffalo'] as num?)?.toDouble() ?? 0.0;
+          final totalAmount =
+              (summary['totalAmount'] as num?)?.toDouble() ?? 0.0;
 
           return CustomScrollView(
             slivers: [
@@ -149,7 +130,6 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header row
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,31 +137,17 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                RichText(
-                                  text: const TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: 'कितना ',
-                                        style: TextStyle(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.textPrimary,
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text: 'दूध बेचा',
-                                        style: TextStyle(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.primary,
-                                        ),
-                                      ),
-                                    ],
+                              children: const [
+                                Text(
+                                  'कितना दूध बेचा',
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textPrimary,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
-                                const Text(
+                                SizedBox(height: 4),
+                                Text(
                                   'आज ग्राहकों को बेचा गया दूध दर्ज करें',
                                   style: TextStyle(
                                     fontSize: 12,
@@ -193,7 +159,7 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
                           ),
                           const SizedBox(width: 8),
                           SizedBox(
-                            width: 120, // Fixed width to prevent infinite constraints
+                            width: 120,
                             child: ElevatedButton.icon(
                               onPressed: _navigateToAddCustomer,
                               icon: const Icon(Icons.people, size: 16),
@@ -215,8 +181,6 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      
-                      // Summary card with date selector
                       Card(
                         elevation: 2,
                         shape: RoundedRectangleBorder(
@@ -228,7 +192,8 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
                           child: Column(
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text(
                                     'दूध का हिसाब',
@@ -240,9 +205,11 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
                                   ),
                                   DateSelector(
                                     selectedDate: _selectedDate,
-                                    onDateChanged: (d) {
-                                      setState(() => _selectedDate = d);
-                                      milkProvider.fetchEntriesForDate(d);
+                                    onDateChanged: (date) async {
+                                      setState(() => _selectedDate = date);
+                                      await milkProvider.fetchEntriesForDate(
+                                        date,
+                                      );
                                     },
                                   ),
                                 ],
@@ -252,14 +219,13 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
                                 customerCount: customerCount,
                                 cowMilkLiters: totalCow,
                                 buffaloMilkLiters: totalBuffalo,
+                                totalIncome: totalAmount,
                               ),
                             ],
                           ),
                         ),
                       ),
                       const SizedBox(height: 16),
-                      
-                      // Add Milk Entry button
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(
@@ -286,9 +252,7 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
                   ),
                 ),
               ),
-              
-              // Entries list or empty state
-              if (todayEntries.isEmpty)
+              if (dayEntries.isEmpty)
                 const SliverFillRemaining(
                   child: Center(
                     child: Column(
@@ -315,13 +279,8 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
               else
                 SliverList(
                   delegate: SliverChildBuilderDelegate(
-                    (context, index) => MilkEntryTile(
-                      entry: todayEntries[index],
-                      onTap: () {
-                        // TODO: Navigate to entry details or edit screen
-                      },
-                    ),
-                    childCount: todayEntries.length,
+                    (context, index) => MilkEntryTile(entry: dayEntries[index]),
+                    childCount: dayEntries.length,
                   ),
                 ),
               const SliverToBoxAdapter(child: SizedBox(height: 24)),

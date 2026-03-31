@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
@@ -9,14 +11,17 @@ class MarketplaceRemoteDataSource {
 
   MarketplaceRemoteDataSource(this._dio);
 
-  Future<List<String>> uploadImages(List<String> imagePaths) async {
-    debugPrint('[API] POST ${ApiEndpoints.cowSaleImages}');
-    debugPrint('[API] Uploading ${imagePaths.length} images');
-
+  Future<CowSaleModel> createCowSale(
+    CowDetails cowDetails, {
+    List<String> imagePaths = const [],
+  }) async {
     final formData = FormData();
+    formData.fields.add(
+      MapEntry('cowDetails', jsonEncode(_buildCowDetailsPayload(cowDetails))),
+    );
 
     for (final imagePath in imagePaths) {
-      final fileName = imagePath.split('/').last;
+      final fileName = imagePath.split(RegExp(r'[\\/]')).last;
       formData.files.add(
         MapEntry(
           'images',
@@ -26,26 +31,9 @@ class MarketplaceRemoteDataSource {
     }
 
     final response = await _dio.post(
-      ApiEndpoints.cowSaleImages,
-      data: formData,
-    );
-
-    if (response.data is! Map<String, dynamic>) {
-      throw Exception('Invalid response format from server');
-    }
-
-    final responseMap = response.data as Map<String, dynamic>;
-    if (responseMap['success'] != true) {
-      throw Exception(responseMap['message'] ?? 'Failed to upload images');
-    }
-
-    return List<String>.from(responseMap['urls'] ?? []);
-  }
-
-  Future<CowSaleModel> createCowSale(CowDetails cowDetails) async {
-    final response = await _dio.post(
       ApiEndpoints.cowSales,
-      data: {'cowDetails': cowDetails.toJson()},
+      data: formData,
+      options: Options(contentType: 'multipart/form-data'),
     );
 
     if (response.data is! Map<String, dynamic>) {
@@ -58,6 +46,21 @@ class MarketplaceRemoteDataSource {
     }
 
     return CowSaleModel.fromJson(responseMap['data'] as Map<String, dynamic>);
+  }
+
+  Map<String, dynamic> _buildCowDetailsPayload(CowDetails cowDetails) {
+    return {
+      'animalType': cowDetails.animalType,
+      'breed': cowDetails.breed,
+      'age': cowDetails.age,
+      'price': _normalizeNumber(cowDetails.price),
+      'yield': _normalizeNumber(cowDetails.milkYield),
+      'description': cowDetails.description,
+    };
+  }
+
+  dynamic _normalizeNumber(double value) {
+    return value % 1 == 0 ? value.toInt() : value;
   }
 
   Future<List<CowSaleModel>> getMySales() async {
@@ -105,5 +108,73 @@ class MarketplaceRemoteDataSource {
       debugPrint('[API] Sales request failed for $path: $e');
       return [];
     }
+  }
+
+  Map<String, dynamic>? _asMap(dynamic rawData) {
+    if (rawData is Map<String, dynamic>) return rawData;
+    if (rawData is Map) return Map<String, dynamic>.from(rawData);
+    if (rawData is String && rawData.isNotEmpty) {
+      final decoded = jsonDecode(rawData);
+      if (decoded is Map<String, dynamic>) return decoded;
+      if (decoded is Map) return Map<String, dynamic>.from(decoded);
+    }
+    return null;
+  }
+
+  List<String> _extractImageUrls(Map<String, dynamic> responseMap) {
+    final candidates = [
+      responseMap['urls'],
+      responseMap['images'],
+      responseMap['data'],
+      responseMap['data'] is Map ? (responseMap['data'] as Map)['urls'] : null,
+      responseMap['data'] is Map ? (responseMap['data'] as Map)['images'] : null,
+    ];
+
+    for (final candidate in candidates) {
+      final urls = _normalizeUrls(candidate);
+      if (urls.isNotEmpty) return urls;
+    }
+
+    return [];
+  }
+
+  List<String> _normalizeUrls(dynamic value) {
+    if (value is String && value.isNotEmpty) {
+      return [value];
+    }
+
+    if (value is List) {
+      return value
+          .map((item) {
+            if (item is String) return item;
+            if (item is Map<String, dynamic>) {
+              return item['url']?.toString() ??
+                  item['path']?.toString() ??
+                  item['image']?.toString() ??
+                  '';
+            }
+            if (item is Map) {
+              return item['url']?.toString() ??
+                  item['path']?.toString() ??
+                  item['image']?.toString() ??
+                  '';
+            }
+            return '';
+          })
+          .where((url) => url.isNotEmpty)
+          .toList();
+    }
+
+    if (value is Map<String, dynamic>) {
+      final nested = value['urls'] ?? value['images'] ?? value['url'];
+      return _normalizeUrls(nested);
+    }
+
+    if (value is Map) {
+      final nested = value['urls'] ?? value['images'] ?? value['url'];
+      return _normalizeUrls(nested);
+    }
+
+    return [];
   }
 }

@@ -64,6 +64,9 @@ class ApiEndpoints {
   static const String milkCalculate = '/api/milk-calculator/calculate';
   static const String milkHistory = '/api/milk-calculator/history';
   static String milkCalculation(String id) => '/api/milk-calculator/$id';
+  static const String milkCustomers = '/api/milk-calculator/customers';
+  static const String milkRecords = '/api/milk-calculator/records';
+  static const String milkSummary = '/api/milk-calculator/summary';
 
   // Categories
   static const String categories = '/api/categories';

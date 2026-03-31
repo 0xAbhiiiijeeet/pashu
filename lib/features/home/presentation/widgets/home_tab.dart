@@ -62,7 +62,7 @@ class _BenefitsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    
+
     return Container(
       width: double.infinity,
       clipBehavior: Clip.antiAlias,
@@ -209,7 +209,7 @@ class _WideChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -236,32 +236,32 @@ class _WideChip extends StatelessWidget {
               ),
               child: problem.image != null && problem.image!.isNotEmpty
                   ? ClipRRect(
-                      borderRadius: BorderRadius.circular(38),
-                      child: CachedNetworkImage(
-                        imageUrl: '${ApiEndpoints.baseUrl}${problem.image}',
-                        width: 62,
-                        height: 62,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          color: Colors.grey[200],
-                          child: const Center(
-                            child: SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Color(0xFF666B42),
-                              ),
-                            ),
-                          ),
-                        ),
-                        errorWidget: (context, url, error) => const Icon(
-                          Icons.pets,
-                          size: 28,
-                          color: Color(0xFF838967),
+                borderRadius: BorderRadius.circular(38),
+                child: CachedNetworkImage(
+                  imageUrl: '${ApiEndpoints.baseUrl}${problem.image}',
+                  width: 62,
+                  height: 62,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    color: Colors.grey[200],
+                    child: const Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Color(0xFF666B42),
                         ),
                       ),
-                    )
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => const Icon(
+                    Icons.pets,
+                    size: 28,
+                    color: Color(0xFF838967),
+                  ),
+                ),
+              )
                   : const Icon(Icons.pets, size: 28, color: Color(0xFF838967)),
             ),
             const SizedBox(height: 10),
@@ -307,7 +307,7 @@ class _SmallChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -335,34 +335,34 @@ class _SmallChip extends StatelessWidget {
               ),
               child: problem.image != null && problem.image!.isNotEmpty
                   ? ClipRRect(
-                      borderRadius: BorderRadius.circular(38),
-                      child: CachedNetworkImage(
-                        imageUrl: '${ApiEndpoints.baseUrl}${problem.image}',
-                        width: 52,
-                        height: 52,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => const Center(
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Color(0xFF666B42),
-                            ),
-                          ),
-                        ),
-                        errorWidget: (context, url, error) => const Icon(
-                          Icons.pets,
-                          size: 24,
-                          color: Color(0xFF838967),
-                        ),
+                borderRadius: BorderRadius.circular(38),
+                child: CachedNetworkImage(
+                  imageUrl: '${ApiEndpoints.baseUrl}${problem.image}',
+                  width: 52,
+                  height: 52,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => const Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Color(0xFF666B42),
                       ),
-                    )
-                  : const Icon(
-                      Icons.pets,
-                      size: 24,
-                      color: Color(0xFF838967),
                     ),
+                  ),
+                  errorWidget: (context, url, error) => const Icon(
+                    Icons.pets,
+                    size: 24,
+                    color: Color(0xFF838967),
+                  ),
+                ),
+              )
+                  : const Icon(
+                Icons.pets,
+                size: 24,
+                color: Color(0xFF838967),
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -486,11 +486,11 @@ class _HomeTabState extends State<HomeTab> {
     final l10n = AppLocalizations.of(context);
     final activeBkg = context.watch<BookingsProvider>().activeBooking;
     final problemsProvider = context.watch<ProblemsProvider>();
-    
+
     final allProblems = problemsProvider.problems.where((p) => p.isActive).toList();
     final problemsByCategory = problemsProvider.problemsByCategory;
     final categories = problemsByCategory.keys.toList();
-    
+
     // Create localized category names for the sticky header
     final localizedCategories = categories.map((category) {
       final problemsInCategory = problemsByCategory[category] ?? [];
@@ -499,7 +499,7 @@ class _HomeTabState extends State<HomeTab> {
       }
       return category;
     }).toList();
-    
+
     // Take first 2 for wide chips, rest for small chips
     final wideProblems = allProblems.take(2).toList();
     final smallProblems = allProblems.skip(2).take(12).toList(); // Take next 12 for grid
@@ -569,97 +569,97 @@ class _HomeTabState extends State<HomeTab> {
                   ),
                 )
               else if (allProblems.isEmpty)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(32.0),
-                    child: Text(
-                      'No problems available',
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
-                    ),
-                  ),
-                )
-              else ...[
-                // Wide chips (first 2) — one row
-                if (wideProblems.length >= 2)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _WideChip(
-                          problem: wideProblems[0],
-                          isSelected: _selectedId == wideProblems[0].id,
-                          onTap: () => _onChipTap(wideProblems[0].id, wideProblems[0].titleEn),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _WideChip(
-                          problem: wideProblems[1],
-                          isSelected: _selectedId == wideProblems[1].id,
-                          onTap: () => _onChipTap(wideProblems[1].id, wideProblems[1].titleEn),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                const SizedBox(height: 8),
-
-                // 4-column grid (remaining items)
-                if (smallProblems.isNotEmpty)
-                  _FourColumnGrid(
-                    problems: smallProblems,
-                    selectedId: _selectedId,
-                    onTap: (id) {
-                      final problem = problemsProvider.getProblemById(id);
-                      if (problem != null) {
-                        _onChipTap(id, problem.titleEn);
-                      }
-                    },
-                  ),
-
-                const SizedBox(height: 12),
-
-                // "or something else" pill
-                Align(
-                  alignment: Alignment.center,
-                  child: GestureDetector(
-                    onTap: () => Navigator.pushNamed(context, '/animal-problems'),
-                    child: Container(
-                      height: 56,
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF5F5F5),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      alignment: Alignment.center,
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32.0),
                       child: Text(
-                        l10n.orSomethingElse,
+                        'No problems available',
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
+                    ),
+                  )
+                else ...[
+                    // Wide chips (first 2) — one row
+                    if (wideProblems.length >= 2)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _WideChip(
+                              problem: wideProblems[0],
+                              isSelected: _selectedId == wideProblems[0].id,
+                              onTap: () => _onChipTap(wideProblems[0].id, wideProblems[0].titleEn),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _WideChip(
+                              problem: wideProblems[1],
+                              isSelected: _selectedId == wideProblems[1].id,
+                              onTap: () => _onChipTap(wideProblems[1].id, wideProblems[1].titleEn),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                    const SizedBox(height: 8),
+
+                    // 4-column grid (remaining items)
+                    if (smallProblems.isNotEmpty)
+                      _FourColumnGrid(
+                        problems: smallProblems,
+                        selectedId: _selectedId,
+                        onTap: (id) {
+                          final problem = problemsProvider.getProblemById(id);
+                          if (problem != null) {
+                            _onChipTap(id, problem.titleEn);
+                          }
+                        },
+                      ),
+
+                    const SizedBox(height: 12),
+
+                    // "or something else" pill
+                    Align(
+                      alignment: Alignment.center,
+                      child: GestureDetector(
+                        onTap: () => Navigator.pushNamed(context, '/animal-problems'),
+                        child: Container(
+                          height: 56,
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF5F5F5),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            l10n.orSomethingElse,
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              height: 1.2,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    // ── Animal Problems categories ─────────────────────────────────────
+                    if (categories.isNotEmpty) ...[
+                      Text(
+                        l10n.animalProblems,
                         style: const TextStyle(
                           color: Colors.black,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
                           height: 1.2,
                         ),
                       ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 28),
-
-                // ── Animal Problems categories ─────────────────────────────────────
-                if (categories.isNotEmpty) ...[
-                  Text(
-                    l10n.animalProblems,
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      height: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ],
+                      const SizedBox(height: 16),
+                    ],
+                  ],
             ]),
           ),
         ),
@@ -681,7 +681,7 @@ class _HomeTabState extends State<HomeTab> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
-                (context, index) {
+                    (context, index) {
                   final category = categories[index];
                   final problems = problemsByCategory[category] ?? [];
                   return AutoScrollTag(
@@ -732,7 +732,7 @@ class _AnimalProblemSection extends StatelessWidget {
     final displayCategory = problems.isNotEmpty
         ? problems.first.getLocalizedCategory(l10n.isHindi)
         : category;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -780,7 +780,7 @@ class _BookedCallBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    
+
     return Container(
       width: double.infinity,
       clipBehavior: Clip.antiAlias,

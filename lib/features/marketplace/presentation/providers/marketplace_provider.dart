@@ -26,13 +26,19 @@ class MarketplaceProvider extends ChangeNotifier {
   }
 
   /// Create a new cow sale
-  Future<bool> createCowSale(CowDetails cowDetails) async {
+  Future<bool> createCowSale(
+    CowDetails cowDetails, {
+    List<String> imagePaths = const [],
+  }) async {
     _setLoading();
     debugPrint('🐄 [Marketplace] Creating cow sale...');
     debugPrint('📝 [Marketplace] Details: ${cowDetails.toJson()}');
     
     try {
-      final sale = await _dataSource.createCowSale(cowDetails);
+      final sale = await _dataSource.createCowSale(
+        cowDetails,
+        imagePaths: imagePaths,
+      );
       _mySales = [sale, ..._mySales];
       
       debugPrint('✅ [Marketplace] Cow sale created successfully!');
@@ -60,42 +66,6 @@ class MarketplaceProvider extends ChangeNotifier {
       debugPrint('   Stack Trace: $stackTrace');
       _setError(e.toString());
       return false;
-    }
-  }
-
-  /// Upload images and return URLs
-  Future<List<String>?> uploadImages(List<String> imagePaths) async {
-    debugPrint('📸 [Marketplace] Uploading ${imagePaths.length} images...');
-    for (int i = 0; i < imagePaths.length; i++) {
-      debugPrint('   Image ${i + 1}: ${imagePaths[i]}');
-    }
-    
-    try {
-      final urls = await _dataSource.uploadImages(imagePaths);
-      
-      debugPrint('✅ [Marketplace] Images uploaded successfully!');
-      debugPrint('   Uploaded ${urls.length} images');
-      for (int i = 0; i < urls.length; i++) {
-        debugPrint('   URL ${i + 1}: ${urls[i]}');
-      }
-      
-      return urls;
-    } on DioException catch (e) {
-      debugPrint('❌ [Marketplace] Image upload failed - DioException:');
-      debugPrint('   Status Code: ${e.response?.statusCode}');
-      debugPrint('   Response Data: ${e.response?.data}');
-      debugPrint('   Error Message: ${e.message}');
-      debugPrint('   Error Type: ${e.type}');
-      
-      final errorMsg = _extractDioError(e);
-      debugPrint('   Extracted Error: $errorMsg');
-      _setError(errorMsg);
-      return null;
-    } catch (e, stackTrace) {
-      debugPrint('❌ [Marketplace] Image upload failed - Unexpected error: $e');
-      debugPrint('   Stack Trace: $stackTrace');
-      _setError(e.toString());
-      return null;
     }
   }
 
@@ -168,9 +138,16 @@ class MarketplaceProvider extends ChangeNotifier {
 
   String _extractDioError(DioException e) {
     if (e.response != null) {
-      final responseData = e.response?.data as Map<String, dynamic>?;
-      final message = responseData?['message'] as String?;
-      if (message != null) return message;
+      final responseData = e.response?.data;
+      if (responseData is Map<String, dynamic>) {
+        final message = responseData['message'] as String?;
+        if (message != null) return message;
+      } else if (responseData is Map) {
+        final message = responseData['message']?.toString();
+        if (message != null && message.isNotEmpty) return message;
+      } else if (responseData is String && responseData.isNotEmpty) {
+        return responseData;
+      }
     }
     return e.message ?? 'Unable to complete this action. Please try again.';
   }

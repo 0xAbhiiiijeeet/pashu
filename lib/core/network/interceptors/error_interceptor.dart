@@ -32,8 +32,7 @@ class ErrorInterceptor extends Interceptor {
 
       case DioExceptionType.badResponse:
         final statusCode = err.response?.statusCode;
-        final message =
-            err.response?.data?['message'] as String? ?? 'Unknown error';
+        final message = _extractMessage(err.response?.data);
 
         if (statusCode == 401) {
           appException = AppException.unauthorized();
@@ -58,5 +57,25 @@ class ErrorInterceptor extends Interceptor {
         response: err.response,
       ),
     );
+  }
+
+  String _extractMessage(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      final message = data['message'];
+      if (message != null) return message.toString();
+      return 'Unknown error';
+    }
+
+    if (data is Map) {
+      final message = data['message'];
+      if (message != null) return message.toString();
+      return 'Unknown error';
+    }
+
+    if (data is String && data.isNotEmpty) {
+      return data;
+    }
+
+    return 'Unknown error';
   }
 }

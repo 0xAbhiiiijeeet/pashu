@@ -6,7 +6,6 @@ import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/questions/presentation/screens/animal_problems_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/subscription/presentation/screens/subscription_screen.dart';
-import '../../features/milk_calculator/presentation/screens/milk_calculator_screen.dart';
 import '../../features/milk/presentation/screens/milk_khata_dashboard_screen.dart';
 import '../../features/milk/presentation/screens/add_customer_screen.dart';
 import '../../features/milk/presentation/screens/add_milk_entry_screen.dart';
@@ -34,51 +33,67 @@ class RouteNames {
 }
 
 class AppRouter {
+  static MaterialPageRoute<T> _route<T>(Widget page) {
+    return MaterialPageRoute<T>(
+      builder: (_) => page,
+      allowSnapshotting: false,
+    );
+  }
+
+  static PageRouteBuilder<T> _noAnimationRoute<T>(Widget page) {
+    return PageRouteBuilder<T>(
+      pageBuilder: (_, __, ___) => page,
+      transitionDuration: Duration.zero,
+      reverseTransitionDuration: Duration.zero,
+      transitionsBuilder: (_, __, ___, child) => child,
+    );
+  }
+
   static Route<dynamic> generateRoute(RouteSettings settings) {
     print('🔧 Generating route for: ${settings.name}');
     
     try {
       switch (settings.name) {
         case RouteNames.login:
-          return MaterialPageRoute(builder: (_) => const LoginScreen());
+          return _route(const LoginScreen());
 
         case RouteNames.otp:
           final args = settings.arguments as Map<String, dynamic>?;
           final phone = args?['phoneNumber'] as String? ?? '';
-          return MaterialPageRoute(builder: (_) => OtpScreen(phoneNumber: phone));
+          return _route(OtpScreen(phoneNumber: phone));
 
         case RouteNames.home:
-          return MaterialPageRoute(builder: (_) => const HomeScreen());
+          return _route(const HomeScreen());
 
         case RouteNames.animalProblems:
-          return MaterialPageRoute(builder: (_) => const AnimalProblemsScreen());
+          return _route(const AnimalProblemsScreen());
 
         case RouteNames.profile:
-          return MaterialPageRoute(builder: (_) => const ProfileScreen());
+          return _route(const ProfileScreen());
 
         case RouteNames.subscription:
-          return MaterialPageRoute(builder: (_) => const SubscriptionScreen());
+          return _route(const SubscriptionScreen());
 
         case RouteNames.milkCalculator:
-          return MaterialPageRoute(builder: (_) => const MilkCalculatorScreen());
+          return _noAnimationRoute(const MilkKhataDashboardScreen());
 
         case RouteNames.milkKhata:
-          return MaterialPageRoute(builder: (_) => const MilkKhataDashboardScreen());
+          return _noAnimationRoute(const MilkKhataDashboardScreen());
 
         case RouteNames.addCustomer:
-          return MaterialPageRoute(builder: (_) => const AddCustomerScreen());
+          return _noAnimationRoute(const AddCustomerScreen());
 
         case RouteNames.addMilkEntry:
-          return MaterialPageRoute(builder: (_) => const AddMilkEntryScreen());
+          return _noAnimationRoute(const AddMilkEntryScreen());
 
         case RouteNames.marketplace:
-          return MaterialPageRoute(builder: (_) => const MarketplaceHomeScreen());
+          return _route(const MarketplaceHomeScreen());
 
         case RouteNames.buyCattle:
-          return MaterialPageRoute(builder: (_) => const BuyCattleScreen());
+          return _route(const BuyCattleScreen());
 
         case RouteNames.sellCattle:
-          return MaterialPageRoute(builder: (_) => const SellCattleScreen());
+          return _route(const SellCattleScreen());
 
         default:
           return MaterialPageRoute(

@@ -25,6 +25,7 @@ import 'features/bookings/presentation/providers/bookings_provider.dart';
 import 'features/home/presentation/screens/home_screen.dart';
 import 'features/marketplace/data/datasources/marketplace_remote_datasource.dart';
 import 'features/marketplace/presentation/providers/marketplace_provider.dart';
+import 'features/milk/data/datasources/milk_remote_datasource.dart';
 import 'features/milk/presentation/providers/milk_provider.dart';
 import 'features/milk_calculator/data/datasources/milk_calculator_remote_datasource.dart';
 import 'features/milk_calculator/presentation/providers/milk_calculator_provider.dart';
@@ -178,7 +179,9 @@ class PashuMitraApp extends StatelessWidget {
           ),
         ),
         ChangeNotifierProvider<MilkProvider>(
-          create: (_) => MilkProvider(),
+          create: (_) => MilkProvider(
+            MilkRemoteDataSource(DioClient.instance.dio),
+          ),
         ),
         Provider<ConnectivityService>(
           create: (_) => ConnectivityService(),
@@ -238,6 +241,5 @@ class _AuthGate extends StatelessWidget {
     return const HomeScreen();
   }
 }
-
 
 

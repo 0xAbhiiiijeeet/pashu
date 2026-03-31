@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../domain/models/cow_sale_model.dart';
+import '../providers/marketplace_provider.dart';
 import '../widgets/shared_widgets.dart';
 import 'buy_cattle_screen.dart';
 import 'sell_cattle_screen.dart';
@@ -14,174 +19,203 @@ class MarketplaceHomeScreen extends StatefulWidget {
 class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> {
   bool _showVipSheet = false;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<MarketplaceProvider>();
+      provider.fetchMySales();
+      provider.fetchApprovedSales();
+    });
+  }
+
   void _toggleVipSheet() => setState(() => _showVipSheet = !_showVipSheet);
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<MarketplaceProvider>();
+
     return Stack(
       children: [
         ListView(
           padding: const EdgeInsets.only(bottom: 24),
           children: [
-            // Promo Banner
             PromoBanner(
-              liveCount: 1459,
+              liveCount: provider.approvedSales.length,
               onTap: _toggleVipSheet,
             ),
-
-              // Buy / Sell cards
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _ActionCard(
-                        title: 'पशु ख़रीदें',
-                        subtitle: '474+ नए पशु',
-                        color: AppColors.primary,
-                        icon: Icons.shopping_cart_outlined,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const BuyCattleScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          _ActionCard(
-                            title: 'पशु बेचें',
-                            subtitle: '1459+ ख़रीददार',
-                            color: AppColors.sage,
-                            icon: Icons.storefront_outlined,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const SellCattleScreen(),
-                                ),
-                              );
-                            },
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _ActionCard(
+                      title: 'पशु खरीदें',
+                      subtitle: '${provider.approvedSales.length}+ नए पशु',
+                      color: AppColors.primary,
+                      icon: Icons.shopping_cart_outlined,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const BuyCattleScreen(),
                           ),
-                          Positioned(
-                            top: -8,
-                            left: 12,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        _ActionCard(
+                          title: 'पशु बेचें',
+                          subtitle: '${provider.mySales.length}+ मेरी लिस्टिंग',
+                          color: AppColors.sage,
+                          icon: Icons.storefront_outlined,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const SellCattleScreen(),
                               ),
-                              decoration: BoxDecoration(
-                                color: AppColors.golden,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Text(
-                                'फ्री पशु दर्ज',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                            );
+                          },
+                        ),
+                        Positioned(
+                          top: -8,
+                          left: 12,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.golden,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'फ्री पशु दर्ज',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-
-              // Feature grid
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                child: GridView.count(
-                  crossAxisCount: 3,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  childAspectRatio: 0.9,
-                  children: const [
-                    FeatureGridCard(
-                      title: 'रेट जानें',
-                      subtitle: 'पशु का सही रेट',
-                      icon: Icons.calculate_outlined,
-                      bgColor: AppColors.mintGreen,
-                    ),
-                    FeatureGridCard(
-                      title: 'दूध बढ़ाये',
-                      subtitle: 'योजना बनाएँ',
-                      icon: Icons.water_drop_outlined,
-                      bgColor: AppColors.mintGreen,
-                    ),
-                    FeatureGridCard(
-                      title: 'पशु उस्ताद',
-                      subtitle: 'सलाह लें',
-                      icon: Icons.support_agent_outlined,
-                      bgColor: AppColors.mintGreen,
-                      isLocked: true,
-                    ),
-                  ],
-                ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: GridView.count(
+                crossAxisCount: 3,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: 0.9,
+                children: [
+                  FeatureGridCard(
+                    title: 'रेट जानें',
+                    subtitle: 'पशु buy और sell',
+                    icon: Icons.calculate_outlined,
+                    bgColor: AppColors.mintGreen,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const BuyCattleScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  FeatureGridCard(
+                    title: 'दूध बढ़ाये',
+                    subtitle: 'योजना बनायें',
+                    icon: Icons.water_drop_outlined,
+                    bgColor: AppColors.mintGreen,
+                    onTap: () {
+                      Navigator.pushNamed(context, '/milk-khata');
+                    },
+                  ),
+                  FeatureGridCard(
+                    title: 'पशु उस्ताद',
+                    subtitle: 'होम पेज',
+                    icon: Icons.support_agent_outlined,
+                    bgColor: AppColors.mintGreen,
+                    onTap: () {
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/home',
+                        (route) => false,
+                      );
+                    },
+                  ),
+                ],
               ),
-
-              // My Animals section
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'मेरे पशु',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'मेरे पशु',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SellCattleScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'सब देखें >',
+                      style: TextStyle(color: AppColors.primary),
                     ),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text(
-                        'सब देखें >',
-                        style: TextStyle(color: AppColors.primary),
-                      ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              height: 180,
+              child: provider.mySales.isEmpty
+                  ? const _EmptyMyAnimals()
+                  : ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      itemCount: provider.mySales.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 10),
+                      itemBuilder: (context, index) {
+                        return _MySaleCard(sale: provider.mySales[index]);
+                      },
                     ),
-                  ],
-                ),
-              ),
-              SizedBox(
-                height: 180, // Further reduced to match optimized card content
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  children: const [
-                    MyAnimalCard(buyerCount: 1459, isIncomplete: true),
-                    SizedBox(width: 10),
-                    MyAnimalCard(buyerCount: 832, isIncomplete: false),
-                  ],
-                ),
-              ),
-            ],
+            ),
+          ],
+        ),
+        if (_showVipSheet)
+          GestureDetector(
+            onTap: _toggleVipSheet,
+            child: Container(color: Colors.black45),
           ),
-
-          // VIP Paywall overlay
-          if (_showVipSheet)
-            GestureDetector(
-              onTap: _toggleVipSheet,
-              child: Container(color: Colors.black45),
-            ),
-          if (_showVipSheet)
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: VipPaywallSheet(onClose: _toggleVipSheet),
-            ),
-        ],
-      );
-    }
+        if (_showVipSheet)
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: VipPaywallSheet(onClose: _toggleVipSheet),
+          ),
+      ],
+    );
   }
+}
 
 class _ActionCard extends StatelessWidget {
   final String title;
@@ -213,15 +247,16 @@ class _ActionCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 4),
                 const Icon(
                   Icons.arrow_forward_ios,
                   size: 12,
@@ -234,9 +269,15 @@ class _ActionCard extends StatelessWidget {
               children: [
                 const Icon(Icons.circle, size: 8, color: Colors.white70),
                 const SizedBox(width: 4),
-                Text(
-                  subtitle,
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                Expanded(
+                  child: Text(
+                    subtitle,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -249,7 +290,160 @@ class _ActionCard extends StatelessWidget {
   }
 }
 
-// ─── VipPaywallSheet ──────────────────────────────────────────────────────────
+class _EmptyMyAnimals extends StatelessWidget {
+  const _EmptyMyAnimals();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x14000000),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.pets, size: 36, color: AppColors.primary),
+                SizedBox(height: 10),
+                Text(
+                  'अभी कोई पशु बिक्री पर नहीं है',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'पशु बेचें में जाकर अपनी पहली लिस्टिंग जोड़ें',
+                  style: TextStyle(color: Colors.black54),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MySaleCard extends StatelessWidget {
+  final CowSaleModel sale;
+
+  const _MySaleCard({required this.sale});
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl =
+        sale.cowDetails.images.isNotEmpty ? sale.cowDetails.images.first : null;
+
+    return Container(
+      width: 220,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: sale.status == 'approved'
+                    ? Colors.green.shade50
+                    : Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                sale.status.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: sale.status == 'approved'
+                      ? Colors.green.shade700
+                      : Colors.orange.shade800,
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: imageUrl != null && imageUrl.isNotEmpty
+                    ? Image.network(
+                        imageUrl.startsWith('http')
+                            ? imageUrl
+                            : '${ApiEndpoints.baseUrl}${imageUrl.startsWith('/') ? imageUrl.substring(1) : imageUrl}',
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _fallbackImage(),
+                      )
+                    : _fallbackImage(),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              sale.cowDetails.breed,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '₹${sale.cowDetails.price.toStringAsFixed(0)}',
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${sale.cowDetails.milkYield.toStringAsFixed(1)} L/day',
+              style: const TextStyle(fontSize: 11, color: Colors.black54),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _fallbackImage() {
+    return Container(
+      color: AppColors.mintGreen,
+      child: const Center(
+        child: Icon(
+          Icons.pets,
+          color: AppColors.primary,
+          size: 28,
+        ),
+      ),
+    );
+  }
+}
+
 class VipPaywallSheet extends StatelessWidget {
   final VoidCallback? onClose;
 
@@ -266,7 +460,6 @@ class VipPaywallSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // handle
           Container(
             width: 40,
             height: 4,
@@ -287,11 +480,14 @@ class VipPaywallSheet extends StatelessWidget {
                       TextSpan(
                         children: [
                           TextSpan(
-                            text: 'ये सिर्फ़ ',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            text: 'ये सिर्फ ',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           TextSpan(
-                            text: 'VIP ख़रीदारों',
+                            text: 'VIP खरीदारों',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -300,7 +496,10 @@ class VipPaywallSheet extends StatelessWidget {
                           ),
                           TextSpan(
                             text: ' के लिए है',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
@@ -308,7 +507,7 @@ class VipPaywallSheet extends StatelessWidget {
                     ),
                     SizedBox(height: 4),
                     Text(
-                      'एक्सपर्ट से पाएं आसान समाधान',
+                      'एक्सपर्ट से पाएँ आसान समाधान',
                       style: TextStyle(color: Colors.black54, fontSize: 13),
                     ),
                   ],
@@ -325,8 +524,6 @@ class VipPaywallSheet extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-
-          // VIP Plan card
           Container(
             decoration: BoxDecoration(
               border: Border.all(color: AppColors.primary, width: 1.5),
@@ -340,7 +537,10 @@ class VipPaywallSheet extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.cream,
                         borderRadius: BorderRadius.circular(20),
@@ -351,7 +551,7 @@ class VipPaywallSheet extends StatelessWidget {
                           Icon(Icons.star, size: 14, color: AppColors.golden),
                           SizedBox(width: 4),
                           Text(
-                            'VIP ख़रीदार',
+                            'VIP खरीदार',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -361,13 +561,19 @@ class VipPaywallSheet extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const Icon(Icons.radio_button_checked, color: AppColors.primary),
+                    const Icon(
+                      Icons.radio_button_checked,
+                      color: AppColors.primary,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 10),
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.mintGreen,
                     borderRadius: BorderRadius.circular(8),
@@ -377,7 +583,10 @@ class VipPaywallSheet extends StatelessWidget {
                       children: [
                         TextSpan(
                           text: 'सलाह लें ',
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
                         ),
                         TextSpan(
                           text: 'एक्सपर्ट से',
@@ -400,13 +609,13 @@ class VipPaywallSheet extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
+                    const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          _BenefitRow('3-5 हज़ार ज़्यादा मुनाफ़े वाले सौदे'),
+                        children: [
+                          _BenefitRow('3-5 हजार ज़्यादा मुनाफ़े वाले सौदे'),
                           _BenefitRow('कोई ऐड नहीं'),
-                          _BenefitRow('फिर ₹199/महिना'),
+                          _BenefitRow('फिर ₹199/महीना'),
                         ],
                       ),
                     ),
@@ -423,7 +632,10 @@ class VipPaywallSheet extends StatelessWidget {
                         ),
                         Text(
                           '1 दिन का ट्रायल',
-                          style: TextStyle(fontSize: 11, color: Colors.black45),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.black45,
+                          ),
                         ),
                       ],
                     ),
@@ -438,12 +650,19 @@ class VipPaywallSheet extends StatelessWidget {
                   ),
                   child: Row(
                     children: const [
-                      Icon(Icons.lock_outline, size: 14, color: AppColors.golden),
+                      Icon(
+                        Icons.lock_outline,
+                        size: 14,
+                        color: AppColors.golden,
+                      ),
                       SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          'हर महीने ऑटोपेमेंट। कभी भी कैंसल करें',
-                          style: TextStyle(fontSize: 12, color: Colors.black54),
+                          'हर महीने ऑटोपेमेंट. कभी भी कैंसल करें',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.black54,
+                          ),
                         ),
                       ),
                     ],
@@ -453,8 +672,6 @@ class VipPaywallSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-
-          // Subscribe button
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -468,7 +685,7 @@ class VipPaywallSheet extends StatelessWidget {
                 ),
               ),
               child: const Text(
-                'प्लान लें  ₹1',
+                'प्लान लें ₹1',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),

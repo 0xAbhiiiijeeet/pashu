@@ -58,6 +58,7 @@ class CowSaleModel {
 }
 
 class CowDetails {
+  final String animalType;
   final String breed;
   final int age;
   final double price;
@@ -66,6 +67,7 @@ class CowDetails {
   final String description;
 
   CowDetails({
+    this.animalType = 'cow',
     required this.breed,
     required this.age,
     required this.price,
@@ -76,6 +78,7 @@ class CowDetails {
 
   factory CowDetails.fromJson(Map<String, dynamic> json) {
     return CowDetails(
+      animalType: json['animalType']?.toString() ?? 'cow',
       breed: json['breed'] ?? '',
       age: json['age'] ?? 0,
       price: (json['price'] ?? 0).toDouble(),
@@ -87,6 +90,7 @@ class CowDetails {
 
   Map<String, dynamic> toJson() {
     return {
+      'animalType': animalType,
       'breed': breed,
       'age': age,
       'price': price,

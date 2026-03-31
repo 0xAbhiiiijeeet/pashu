@@ -12,7 +12,8 @@ class RemoteConfigService {
   bool _initialized = false;
 
   // Default values
-  static const String _defaultBaseUrl = 'https://4wtzlrjn-5000.inc1.devtunnels.ms/';
+  static const String _defaultBaseUrl =
+      'https://4wtzlrjn-5000.inc1.devtunnels.ms/';
   static const String _defaultAppUrl =
       'https://drive.google.com/file/d/1PpHB8_I07gNTKj-j0DII9JEJ5lThZ-a4/view?usp=drive_link';
 

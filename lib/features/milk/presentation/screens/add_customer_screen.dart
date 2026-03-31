@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../core/constants/app_colors.dart';
-import '../widgets/common_widgets.dart';
 import '../providers/milk_provider.dart';
+import '../widgets/common_widgets.dart';
 
 class AddCustomerScreen extends StatefulWidget {
   const AddCustomerScreen({super.key});
@@ -16,57 +17,63 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
+  String _milkTypePreference = 'Both';
   bool _isLoading = false;
 
   @override
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _addressController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() => _isLoading = true);
-      
-      try {
-        final milkProvider = context.read<MilkProvider>();
-        final success = await milkProvider.addCustomer(
-          name: _nameController.text.trim(),
-          phoneNumber: _phoneController.text.trim(),
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final milkProvider = context.read<MilkProvider>();
+      final success = await milkProvider.addCustomer(
+        name: _nameController.text.trim(),
+        phoneNumber: _phoneController.text.trim(),
+        address: _addressController.text.trim(),
+        milkTypePreference: _milkTypePreference,
+      );
+
+      if (!mounted) return;
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('ग्राहक सफलतापूर्वक जोड़ा गया!'),
+            backgroundColor: AppColors.success,
+          ),
         );
-        
-        if (mounted) {
-          if (success) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('ग्राहक सफलतापूर्वक जोड़ा गया!'),
-                backgroundColor: AppColors.success,
-              ),
-            );
-            Navigator.pop(context, true); // Return true to indicate success
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(milkProvider.errorMessage ?? 'ग्राहक जोड़ने में त्रुटि हुई'),
-                backgroundColor: AppColors.error,
-              ),
-            );
-          }
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('त्रुटि: ${e.toString()}'),
-              backgroundColor: AppColors.error,
+        Navigator.pop(context, true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              milkProvider.errorMessage ?? 'ग्राहक जोड़ने में त्रुटि हुई',
             ),
-          );
-        }
-      } finally {
-        if (mounted) {
-          setState(() => _isLoading = false);
-        }
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('त्रुटि: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
   }
@@ -94,7 +101,6 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Section header
                     RichText(
                       text: const TextSpan(
                         children: [
@@ -119,18 +125,16 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                     ),
                     const SizedBox(height: 6),
                     const Text(
-                      'दूध लेने वाले का नाम और उसका फ़ोन नंबर दर्ज करें',
+                      'दूध लेने वाले का नाम, फोन, पता और पसंद दर्ज करें',
                       style: TextStyle(
                         fontSize: 13,
                         color: AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 28),
-                    
-                    // Customer name
                     MilkInputField(
                       label: 'ग्राहक का नाम',
-                      hint: 'जैसे: राम कुमार',
+                      hint: 'जैसे: राजेश कुमार',
                       controller: _nameController,
                       keyboardType: TextInputType.name,
                       inputFormatters: [
@@ -138,71 +142,97 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                           RegExp(r'[a-zA-Z\u0900-\u097F\s]'),
                         ),
                       ],
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) {
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
                           return 'कृपया ग्राहक का नाम दर्ज करें';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 20),
-                    
-                    // Phone number
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        MilkInputField(
-                          label: 'ग्राहक का फ़ोन नंबर',
-                          hint: 'जैसे: 9876543210',
-                          controller: _phoneController,
-                          keyboardType: TextInputType.phone,
-                          maxLength: 10,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          validator: (v) {
-                            if (v == null || v.isEmpty) {
-                              return 'कृपया फ़ोन नंबर दर्ज करें';
-                            }
-                            if (v.length != 10) {
-                              return '10 अंकों का मोबाइल नंबर दर्ज करें';
-                            }
-                            return null;
-                          },
+                    MilkInputField(
+                      label: 'ग्राहक का फोन नंबर',
+                      hint: 'जैसे: 9876543212',
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      maxLength: 10,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'कृपया फोन नंबर दर्ज करें';
+                        }
+                        if (value.length != 10) {
+                          return '10 अंकों का मोबाइल नंबर दर्ज करें';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    MilkInputField(
+                      label: 'पता',
+                      hint: 'जैसे: Village A',
+                      controller: _addressController,
+                      keyboardType: TextInputType.streetAddress,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'कृपया पता दर्ज करें';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'दूध पसंद',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      value: _milkTypePreference,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: AppColors.surface,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 14,
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                '10 अंकों का मोबाइल नंबर',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                              ValueListenableBuilder(
-                                valueListenable: _phoneController,
-                                builder: (_, v, __) => Text(
-                                  '${v.text.length}/10',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ),
-                            ],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: AppColors.divider),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: AppColors.divider),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                            color: AppColors.primary,
+                            width: 2,
                           ),
                         ),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'Cow', child: Text('Cow')),
+                        DropdownMenuItem(
+                          value: 'Buffalo',
+                          child: Text('Buffalo'),
+                        ),
+                        DropdownMenuItem(value: 'Both', child: Text('Both')),
                       ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _milkTypePreference = value);
+                        }
+                      },
                     ),
                   ],
                 ),
               ),
             ),
-            
-            // Submit button
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               child: SizedBox(

@@ -1,22 +1,27 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import '../../domain/models/milk_entry_model.dart';
+
+import '../../data/datasources/milk_remote_datasource.dart';
 import '../../domain/models/customer_model.dart';
+import '../../domain/models/milk_entry_model.dart';
 
 class MilkProvider extends ChangeNotifier {
-  // State
+  MilkProvider(this._dataSource);
+
+  final MilkRemoteDataSource _dataSource;
+
   String _status = 'initial';
   List<MilkEntry> _entries = [];
   List<Customer> _customers = [];
+  Map<String, dynamic> _todaySummary = {};
   String? _errorMessage;
 
-  // Getters
   String get status => _status;
   List<MilkEntry> get entries => _entries;
   List<Customer> get customers => _customers;
   String? get errorMessage => _errorMessage;
   bool get isLoading => _status == 'loading';
 
-  // Get entries for a specific date
   List<MilkEntry> getEntriesForDate(DateTime date) {
     return _entries.where((entry) {
       return entry.date.year == date.year &&
@@ -25,230 +30,226 @@ class MilkProvider extends ChangeNotifier {
     }).toList();
   }
 
-  // Get summary for a specific date
   Map<String, dynamic> getSummaryForDate(DateTime date) {
-    try {
-      final dayEntries = getEntriesForDate(date);
-      
-      final customerCount = dayEntries.length;
-      final totalCow = dayEntries.fold<double>(0, (sum, entry) => sum + entry.cowMilk);
-      final totalBuffalo = dayEntries.fold<double>(0, (sum, entry) => sum + entry.buffaloMilk);
-      final totalAmount = dayEntries.fold<double>(0, (sum, entry) => sum + (entry.totalAmount ?? 0));
-
+    if (_isSameDay(date, DateTime.now()) && _todaySummary.isNotEmpty) {
       return {
-        'customerCount': customerCount,
-        'totalCow': totalCow,
-        'totalBuffalo': totalBuffalo,
-        'totalLiters': totalCow + totalBuffalo,
-        'totalAmount': totalAmount,
-      };
-    } catch (e) {
-      debugPrint('Error in getSummaryForDate: $e');
-      return {
-        'customerCount': 0,
-        'totalCow': 0.0,
-        'totalBuffalo': 0.0,
-        'totalLiters': 0.0,
-        'totalAmount': 0.0,
+        'customerCount': _todaySummary['totalCustomers'] ?? 0,
+        'totalCow': (_todaySummary['cowMilkLiters'] as num?)?.toDouble() ?? 0,
+        'totalBuffalo':
+            (_todaySummary['buffaloMilkLiters'] as num?)?.toDouble() ?? 0,
+        'totalLiters':
+            ((_todaySummary['cowMilkLiters'] as num?)?.toDouble() ?? 0) +
+                ((_todaySummary['buffaloMilkLiters'] as num?)?.toDouble() ?? 0),
+        'totalAmount': (_todaySummary['totalIncome'] as num?)?.toDouble() ?? 0,
       };
     }
+
+    final dayEntries = getEntriesForDate(date);
+    final customerCount = dayEntries.length;
+    final totalCow =
+        dayEntries.fold<double>(0, (sum, entry) => sum + entry.cowMilk);
+    final totalBuffalo =
+        dayEntries.fold<double>(0, (sum, entry) => sum + entry.buffaloMilk);
+    final totalAmount = dayEntries.fold<double>(
+      0,
+      (sum, entry) => sum + (entry.totalAmount ?? 0),
+    );
+
+    return {
+      'customerCount': customerCount,
+      'totalCow': totalCow,
+      'totalBuffalo': totalBuffalo,
+      'totalLiters': totalCow + totalBuffalo,
+      'totalAmount': totalAmount,
+    };
   }
 
-  // Initialize with dummy data (remove when backend is ready)
   Future<void> init() async {
-    if (_status == 'loading') return; // Prevent multiple simultaneous inits
-    
+    if (_status == 'loading') return;
     _setLoading();
-    
     try {
-      debugPrint('🥛 Initializing MilkProvider...');
-      
-      // Simulate API delay
-      await Future.delayed(const Duration(milliseconds: 500));
-      
-      // Load dummy data
-      _loadDummyData();
-      
+      await Future.wait([
+        fetchCustomers(notify: false),
+        fetchEntriesForDate(DateTime.now(), notify: false),
+        fetchDailySummary(notify: false),
+      ]);
       _status = 'loaded';
       _errorMessage = null;
-      debugPrint('✅ MilkProvider initialized successfully');
       notifyListeners();
     } catch (e) {
-      debugPrint('❌ MilkProvider initialization failed: $e');
       _setError(e.toString());
     }
   }
 
-  void _loadDummyData() {
-    _customers = [
-      Customer(
-        id: '1',
-        name: 'राम कुमार',
-        phoneNumber: '9876543210',
-        createdAt: DateTime.now().subtract(const Duration(days: 30)),
-      ),
-      Customer(
-        id: '2',
-        name: 'सीता देवी',
-        phoneNumber: '9876543211',
-        createdAt: DateTime.now().subtract(const Duration(days: 25)),
-      ),
-      Customer(
-        id: '3',
-        name: 'मोहन लाल',
-        phoneNumber: '9876543212',
-        createdAt: DateTime.now().subtract(const Duration(days: 20)),
-      ),
-      Customer(
-        id: '4',
-        name: 'गीता बाई',
-        phoneNumber: '9876543213',
-        createdAt: DateTime.now().subtract(const Duration(days: 15)),
-      ),
-      Customer(
-        id: '5',
-        name: 'श्याम सिंह',
-        phoneNumber: '9876543214',
-        createdAt: DateTime.now().subtract(const Duration(days: 10)),
-      ),
-    ];
-
-    _entries = [
-      MilkEntry(
-        id: '1',
-        customerName: 'राम कुमार',
-        cowMilk: 3.5,
-        buffaloMilk: 2.0,
-        pricePerLiter: 50,
-        date: DateTime.now(),
-        createdAt: DateTime.now(),
-      ),
-      MilkEntry(
-        id: '2',
-        customerName: 'सीता देवी',
-        cowMilk: 0,
-        buffaloMilk: 4.5,
-        pricePerLiter: 60,
-        date: DateTime.now(),
-        createdAt: DateTime.now(),
-      ),
-      MilkEntry(
-        id: '3',
-        customerName: 'मोहन लाल',
-        cowMilk: 2.0,
-        buffaloMilk: 0,
-        pricePerLiter: 48,
-        date: DateTime.now(),
-        createdAt: DateTime.now(),
-      ),
-      // Yesterday's entries
-      MilkEntry(
-        id: '4',
-        customerName: 'राम कुमार',
-        cowMilk: 3.0,
-        buffaloMilk: 2.5,
-        pricePerLiter: 50,
-        date: DateTime.now().subtract(const Duration(days: 1)),
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      MilkEntry(
-        id: '5',
-        customerName: 'गीता बाई',
-        cowMilk: 1.5,
-        buffaloMilk: 3.0,
-        pricePerLiter: 55,
-        date: DateTime.now().subtract(const Duration(days: 1)),
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-    ];
+  Future<void> fetchCustomers({bool notify = true}) async {
+    try {
+      _customers = await _dataSource.getCustomers();
+      if (notify) {
+        _status = 'loaded';
+        _errorMessage = null;
+        notifyListeners();
+      }
+    } catch (e) {
+      if (notify) _setError(e.toString());
+      rethrow;
+    }
   }
 
-  // Add new customer (TODO: integrate with backend)
   Future<bool> addCustomer({
     required String name,
     required String phoneNumber,
+    required String address,
+    required String milkTypePreference,
   }) async {
     _setLoading();
-    
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 1));
-      
-      final newCustomer = Customer(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+      final customer = await _dataSource.addCustomer(
         name: name,
-        phoneNumber: phoneNumber,
-        createdAt: DateTime.now(),
+        phone: phoneNumber,
+        address: address,
+        milkTypePreference: milkTypePreference,
       );
-      
-      _customers.add(newCustomer);
-      
+      _customers = [customer, ..._customers];
       _status = 'loaded';
       _errorMessage = null;
       notifyListeners();
       return true;
+    } on DioException catch (e) {
+      _setError(_extractDioError(e));
+      return false;
     } catch (e) {
       _setError(e.toString());
       return false;
     }
   }
 
-  // Add new milk entry (TODO: integrate with backend)
   Future<bool> addMilkEntry({
+    required String customerId,
     required String customerName,
     required double cowMilk,
     required double buffaloMilk,
-    double? pricePerLiter,
-    DateTime? date,
+    required double pricePerLiter,
+    required DateTime date,
+    required String shift,
   }) async {
     _setLoading();
-    
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 1));
-      
-      final newEntry = MilkEntry(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        customerName: customerName,
-        cowMilk: cowMilk,
-        buffaloMilk: buffaloMilk,
-        pricePerLiter: pricePerLiter,
-        date: date ?? DateTime.now(),
-        createdAt: DateTime.now(),
-      );
-      
-      _entries.add(newEntry);
-      
+      final createdRecords = <MilkEntry>[];
+
+      if (cowMilk > 0) {
+        createdRecords.add(
+          await _dataSource.addMilkRecord(
+            customerId: customerId,
+            quantity: cowMilk,
+            pricePerLiter: pricePerLiter,
+            milkType: 'Cow',
+            shift: shift,
+            date: date,
+          ),
+        );
+      }
+
+      if (buffaloMilk > 0) {
+        createdRecords.add(
+          await _dataSource.addMilkRecord(
+            customerId: customerId,
+            quantity: buffaloMilk,
+            pricePerLiter: pricePerLiter,
+            milkType: 'Buffalo',
+            shift: shift,
+            date: date,
+          ),
+        );
+      }
+
+      if (createdRecords.isEmpty) {
+        _status = 'loaded';
+        notifyListeners();
+        return false;
+      }
+
+      await fetchEntriesForDate(date, notify: false);
+      if (_isSameDay(date, DateTime.now())) {
+        await fetchDailySummary(notify: false);
+      }
+
       _status = 'loaded';
       _errorMessage = null;
       notifyListeners();
       return true;
+    } on DioException catch (e) {
+      _setError(_extractDioError(e));
+      return false;
     } catch (e) {
       _setError(e.toString());
       return false;
     }
   }
 
-  // Fetch entries for a specific date (TODO: integrate with backend)
-  Future<void> fetchEntriesForDate(DateTime date) async {
-    _setLoading();
-    
+  Future<void> fetchEntriesForDate(
+    DateTime date, {
+    bool notify = true,
+  }) async {
+    if (notify) _setLoading();
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(milliseconds: 500));
-      
-      // For now, just filter existing entries
-      // In real implementation, this would fetch from backend
-      
-      _status = 'loaded';
-      _errorMessage = null;
-      notifyListeners();
+      final rawEntries = await _dataSource.getMilkRecords(
+        startDate: date,
+        endDate: date,
+      );
+      _entries = _aggregateEntries(rawEntries, date);
+      if (_isSameDay(date, DateTime.now())) {
+        await fetchDailySummary(notify: false);
+      }
+      if (notify) {
+        _status = 'loaded';
+        _errorMessage = null;
+        notifyListeners();
+      }
     } catch (e) {
-      _setError(e.toString());
+      if (notify) _setError(e.toString());
+      rethrow;
     }
   }
 
-  // Helper methods
+  Future<void> fetchDailySummary({bool notify = true}) async {
+    try {
+      _todaySummary = await _dataSource.getDailySummary();
+      if (notify) notifyListeners();
+    } catch (e) {
+      debugPrint('Milk summary fetch failed: $e');
+    }
+  }
+
+  List<MilkEntry> _aggregateEntries(List<MilkEntry> records, DateTime date) {
+    final grouped = <String, MilkEntry>{};
+
+    for (final record in records) {
+      final key = record.customerId ?? record.customerName;
+      final existing = grouped[key];
+      if (existing == null) {
+        grouped[key] = record;
+        continue;
+      }
+
+      grouped[key] = existing.copyWith(
+        cowMilk: existing.cowMilk + record.cowMilk,
+        buffaloMilk: existing.buffaloMilk + record.buffaloMilk,
+        explicitTotalAmount:
+            (existing.totalAmount ?? 0) + (record.totalAmount ?? 0),
+        pricePerLiter: record.pricePerLiter ?? existing.pricePerLiter,
+        date: date,
+      );
+    }
+
+    final aggregated = grouped.values.toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return aggregated;
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
   void _setLoading() {
     _status = 'loading';
     _errorMessage = null;
@@ -259,6 +260,20 @@ class MilkProvider extends ChangeNotifier {
     _status = 'error';
     _errorMessage = message;
     notifyListeners();
+  }
+
+  String _extractDioError(DioException e) {
+    final responseData = e.response?.data;
+    if (responseData is Map<String, dynamic>) {
+      final message = responseData['message'] as String?;
+      if (message != null) return message;
+    } else if (responseData is Map) {
+      final message = responseData['message']?.toString();
+      if (message != null && message.isNotEmpty) return message;
+    } else if (responseData is String && responseData.isNotEmpty) {
+      return responseData;
+    }
+    return e.message ?? 'Unable to complete this action. Please try again.';
   }
 
   void clearError() {

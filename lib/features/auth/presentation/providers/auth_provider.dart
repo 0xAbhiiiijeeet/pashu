@@ -16,7 +16,7 @@ class AuthProvider extends ChangeNotifier {
   UserModel? _user;
   String? _errorMessage;
   String? _firebaseVerificationId; // for Firebase auth
-  final bool _useFirebaseAuth = true; // Toggle Firebase on/off
+  final bool _useFirebaseAuth = false; // Toggle Firebase on/off
 
   AuthProvider(this._dataSource, this._storageService);
 
