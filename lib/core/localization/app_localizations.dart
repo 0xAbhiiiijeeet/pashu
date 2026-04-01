@@ -33,6 +33,8 @@ class AppLocalizations {
   String get delete => isHindi ? 'हटाएं' : 'Delete';
   String get retry => isHindi ? 'पुनः प्रयास करें' : 'Retry';
   String get ok => isHindi ? 'ठीक है' : 'Ok';
+  String get somethingWentWrong =>
+      isHindi ? 'कुछ गलत हुआ है' : 'Something went wrong';
 
   // Bookings
   String yourCalls(int count) =>
@@ -153,6 +155,20 @@ class AppLocalizations {
   String get incomplete => isHindi ? 'अधूरा' : 'Incomplete';
   String get complete => isHindi ? 'पूर्ण' : 'Complete';
   String get india => isHindi ? 'भारत' : 'India';
+  String get yourProfile => isHindi ? 'आपकी प्रोफाइल' : 'Your Profile';
+  String get checkingForUpdates =>
+      isHindi ? 'अपडेट जांच रहे हैं...' : 'Checking for updates...';
+  String get appUpToDate =>
+      isHindi ? 'आपका ऐप अप टू डेट है!' : 'Your app is up to date!';
+  String get unableToCheckUpdates => isHindi
+      ? 'अपडेट जांचने में असमर्थ। कृपया दोबारा कोशिश करें।'
+      : 'Unable to check for updates. Please try again.';
+  String get refundAndCancellation => isHindi
+      ? 'रिफंड और रद्दीकरण'
+      : 'Refund & Cancellation';
+  String get allRightsReserved => isHindi
+      ? '© 2026 पशु मित्र। सर्वाधिकार सुरक्षित।'
+      : '© 2026 Pashu Mitra. All rights reserved.';
 
   // Subscription
   String get freeTrial =>
@@ -331,6 +347,7 @@ class AppLocalizations {
   String likes(int count) => isHindi ? '$count पसंद' : '$count Likes';
   String commentsCount(int count) =>
       isHindi ? '$count टिप्पणी' : '$count Comment';
+  String get generalCategory => isHindi ? 'सामान्य' : 'General';
 
   // ─────────────────────────────────────────────────────────────────────────
   // Home
@@ -368,6 +385,10 @@ class AppLocalizations {
   String get talkToPashuMitra =>
       isHindi ? 'पशु मित्र से बात करें' : 'Talk to Pashu Mitra';
   String get orSomethingElse => isHindi ? 'या कुछ और?' : 'or something else?';
+  String get milkKhata => isHindi ? 'दूध खाता' : 'Milk Ledger';
+  String get milkKhataSubtitle => isHindi
+      ? 'ग्राहकों का दूध हिसाब रखें'
+      : 'Keep customer milk records';
 
   String get animalProblems => isHindi ? 'पशु समस्याएं' : 'Animal Problems';
 
@@ -608,6 +629,24 @@ class AppLocalizations {
   String get avgMilkAnimal => isHindi ? 'औसत दूध/पशु' : 'Avg Milk/Animal';
   String get totalProduced => isHindi ? 'कुल उत्पादन' : 'Total Produced';
   String get homeUse => isHindi ? 'घरेलू उपयोग' : 'Home Use';
+  String get milkSoldTitle =>
+      isHindi ? 'कितना दूध बेचा' : 'Milk Sales';
+  String get milkSoldSubtitle => isHindi
+      ? 'आज ग्राहकों को बेचा गया दूध दर्ज करें'
+      : 'Record the milk sold to customers today';
+  String get addCustomer =>
+      isHindi ? 'ग्राहक जोड़ें' : 'Add Customer';
+  String get milkLedgerTitle =>
+      isHindi ? 'दूध का हिसाब' : 'Milk Ledger';
+  String get addMilkEntry =>
+      isHindi ? 'दूध एंट्री जोड़ें' : 'Add Milk Entry';
+  String get noEntriesForDay => isHindi
+      ? 'इस दिन के लिए कोई ग्राहक प्रविष्टि नहीं मिली'
+      : 'No customer entries found for this day';
+  String get saveRecord =>
+      isHindi ? 'रिकॉर्ड सहेजें' : 'Save Record';
+  String get failedToSaveRecord =>
+      isHindi ? 'रिकॉर्ड सहेजने में असफल' : 'Failed to save record';
 
   // ─────────────────────────────────────────────────────────────────────────
   // Booking Bottom Sheet

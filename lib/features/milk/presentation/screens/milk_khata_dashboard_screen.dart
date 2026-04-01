@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../providers/milk_provider.dart';
 import '../widgets/common_widgets.dart';
 import '../widgets/milk_entry_tile.dart';
@@ -55,11 +56,13 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
-          'दूध खाता',
+        title: Text(
+          l10n.milkKhata,
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: AppColors.primary,
@@ -96,7 +99,7 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    milkProvider.errorMessage ?? 'कुछ गलत हुआ है',
+                    milkProvider.errorMessage ?? l10n.somethingWentWrong,
                     style: const TextStyle(
                       fontSize: 16,
                       color: AppColors.textSecondary,
@@ -106,7 +109,7 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => milkProvider.init(),
-                    child: const Text('पुनः प्रयास करें'),
+                    child: Text(l10n.retry),
                   ),
                 ],
               ),
@@ -137,9 +140,9 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
+                              children: [
                                 Text(
-                                  'कितना दूध बेचा',
+                                  l10n.milkSoldTitle,
                                   style: TextStyle(
                                     fontSize: 22,
                                     fontWeight: FontWeight.bold,
@@ -148,7 +151,7 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
                                 ),
                                 SizedBox(height: 4),
                                 Text(
-                                  'आज ग्राहकों को बेचा गया दूध दर्ज करें',
+                                  l10n.milkSoldSubtitle,
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: AppColors.textSecondary,
@@ -163,7 +166,7 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
                             child: ElevatedButton.icon(
                               onPressed: _navigateToAddCustomer,
                               icon: const Icon(Icons.people, size: 16),
-                              label: const Text('ग्राहक जोड़ें'),
+                              label: Text(l10n.addCustomer),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.textPrimary,
                                 foregroundColor: AppColors.textOnPrimary,
@@ -195,8 +198,8 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Text(
-                                    'दूध का हिसाब',
+                                  Text(
+                                    l10n.milkLedgerTitle,
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -234,8 +237,8 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
                             Icons.add_circle_outline,
                             color: AppColors.primary,
                           ),
-                          label: const Text(
-                            'दूध एंट्री जोड़ें',
+                          label: Text(
+                            l10n.addMilkEntry,
                             style: TextStyle(color: AppColors.primary),
                           ),
                           style: OutlinedButton.styleFrom(
@@ -253,7 +256,7 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
                 ),
               ),
               if (dayEntries.isEmpty)
-                const SliverFillRemaining(
+                SliverFillRemaining(
                   child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -265,7 +268,7 @@ class _MilkKhataDashboardScreenState extends State<MilkKhataDashboardScreen> {
                         ),
                         SizedBox(height: 16),
                         Text(
-                          'इस दिन के लिए कोई ग्राहक प्रविष्टि नहीं मिली',
+                          l10n.noEntriesForDay,
                           style: TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 14,

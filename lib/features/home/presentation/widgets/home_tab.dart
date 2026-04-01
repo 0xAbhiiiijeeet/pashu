@@ -15,6 +15,19 @@ import 'package:scroll_to_index/scroll_to_index.dart';
 import 'booking_bottom_sheet.dart';
 import 'sticky_chip_header.dart';
 
+String _problemImageUrl(String? imagePath) {
+  if (imagePath == null || imagePath.isEmpty) return '';
+  if (imagePath.startsWith('http')) return imagePath;
+
+  final normalizedBase = ApiEndpoints.baseUrl.endsWith('/')
+      ? ApiEndpoints.baseUrl.substring(0, ApiEndpoints.baseUrl.length - 1)
+      : ApiEndpoints.baseUrl;
+  final normalizedPath =
+      imagePath.startsWith('/') ? imagePath : '/$imagePath';
+
+  return '$normalizedBase$normalizedPath';
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Vertical bullet point used in the Benefits card
 // ─────────────────────────────────────────────────────────────────────────────
@@ -238,7 +251,7 @@ class _WideChip extends StatelessWidget {
                   ? ClipRRect(
                 borderRadius: BorderRadius.circular(38),
                 child: CachedNetworkImage(
-                  imageUrl: '${ApiEndpoints.baseUrl}${problem.image}',
+                  imageUrl: _problemImageUrl(problem.image),
                   width: 62,
                   height: 62,
                   fit: BoxFit.cover,
@@ -321,14 +334,14 @@ class _SmallChip extends StatelessWidget {
                 : BorderSide.none,
           ),
         ),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             // Icon circle
             Container(
-              width: 52,
-              height: 52,
+              width: 46,
+              height: 46,
               decoration: const BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
@@ -337,14 +350,14 @@ class _SmallChip extends StatelessWidget {
                   ? ClipRRect(
                 borderRadius: BorderRadius.circular(38),
                 child: CachedNetworkImage(
-                  imageUrl: '${ApiEndpoints.baseUrl}${problem.image}',
-                  width: 52,
-                  height: 52,
+                  imageUrl: _problemImageUrl(problem.image),
+                  width: 46,
+                  height: 46,
                   fit: BoxFit.cover,
                   placeholder: (context, url) => const Center(
                     child: SizedBox(
-                      width: 20,
-                      height: 20,
+                      width: 18,
+                      height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         color: Color(0xFF666B42),
@@ -360,23 +373,27 @@ class _SmallChip extends StatelessWidget {
               )
                   : const Icon(
                 Icons.pets,
-                size: 24,
+                size: 22,
                 color: Color(0xFF838967),
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              problem.getLocalizedTitle(l10n.isHindi),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: isSelected
-                    ? const Color(0xFF535735)
-                    : const Color(0xFF969696),
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                height: 1.3,
+            const SizedBox(height: 6),
+            Expanded(
+              child: Center(
+                child: Text(
+                  problem.getLocalizedTitle(l10n.isHindi),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: isSelected
+                        ? const Color(0xFF535735)
+                        : const Color(0xFF969696),
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w600,
+                    height: 1.2,
+                  ),
+                ),
               ),
             ),
           ],
@@ -844,6 +861,8 @@ class _BookedCallBanner extends StatelessWidget {
 class _MilkKhataButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return InkWell(
       onTap: () {
         Navigator.pushNamed(context, '/milk-khata');
@@ -886,8 +905,8 @@ class _MilkKhataButton extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'दूध खाता',
+                  Text(
+                    l10n.milkKhata,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -895,9 +914,9 @@ class _MilkKhataButton extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'ग्राहकों का दूध हिसाब रखें',
-                    style: TextStyle(
+                  Text(
+                    l10n.milkKhataSubtitle,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 13,
                     ),

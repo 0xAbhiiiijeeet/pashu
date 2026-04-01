@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/settings_provider.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_widgets.dart';
 
@@ -26,6 +27,10 @@ class _LoginScreenState extends State<LoginScreen> {
         _isButtonEnabled = _phoneController.text.length == 10;
       });
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SettingsProvider>().fetchSettings();
+    });
   }
 
   @override
@@ -35,34 +40,54 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _onContinue() async {
-    if (_isProcessing) return; // Prevent double tap
-    
+    if (_isProcessing) return;
+
     setState(() => _isProcessing = true);
-    
+
+    final phoneNumber = _phoneController.text.trim();
+    final settingsProvider = context.read<SettingsProvider>();
     final authProvider = context.read<AuthProvider>();
-    debugPrint('📱 Sending OTP to: ${_phoneController.text.trim()}');
-    final success = await authProvider.sendOtp(_phoneController.text.trim());
-    debugPrint('📱 OTP send result: $success');
-    
+
+    await settingsProvider.forceRefresh();
+    final isBypass = settingsProvider.isOtpBypassed;
+
     if (!mounted) return;
-    
-    setState(() => _isProcessing = false);
-    
-    if (success) {
-      debugPrint('📱 Navigating to OTP screen...');
-      Navigator.pushNamed(
-        context,
-        RouteNames.otp,
-        arguments: {'phoneNumber': _phoneController.text.trim()},
-      );
-    } else {
-      debugPrint('❌ OTP send failed: ${authProvider.errorMessage}');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.errorMessage ?? 'Unable to send OTP. Please check your number and try again.'),
-        ),
-      );
+
+    if (isBypass) {
+      debugPrint('OTP bypass enabled. Logging in directly...');
+      final success = await authProvider.verifyOtp(phoneNumber, '123456');
+
+      if (!mounted) return;
+
+      setState(() => _isProcessing = false);
+
+      if (success) {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          RouteNames.home,
+          (route) => false,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              authProvider.errorMessage ??
+                  'Unable to login right now. Please try again.',
+            ),
+          ),
+        );
+      }
+      return;
     }
+
+    setState(() => _isProcessing = false);
+
+    debugPrint('Navigating to OTP screen...');
+    Navigator.pushNamed(
+      context,
+      RouteNames.otp,
+      arguments: {'phoneNumber': phoneNumber},
+    );
   }
 
   @override
@@ -73,7 +98,6 @@ class _LoginScreenState extends State<LoginScreen> {
       resizeToAvoidBottomInset: true,
       body: Column(
         children: [
-          // ── AppBar with status bar SafeArea (solid primary colour)
           const ColoredBox(
             color: AppColors.primary,
             child: SafeArea(
@@ -81,8 +105,6 @@ class _LoginScreenState extends State<LoginScreen> {
               child: AuthAppBar(),
             ),
           ),
-
-          // ── Background image + scrollable content below the AppBar
           Expanded(
             child: Stack(
               children: [
@@ -91,8 +113,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     children: [
                       SizedBox(height: size.height * 0.22),
-
-                      // Glassmorphic card (title + subtitle inside)
                       Padding(
                         padding: EdgeInsets.symmetric(
                           horizontal: size.width * 0.05,
@@ -122,10 +142,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               'Enter your number to get answers to all your animal related questions.',
                         ),
                       ),
-
                       SizedBox(height: size.height * 0.025),
-
-                      // Fields outside the card
                       Padding(
                         padding: EdgeInsets.symmetric(
                           horizontal: size.width * 0.05,
@@ -143,7 +160,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
                       ),
-
                       SizedBox(height: size.height * 0.05),
                       const AuthFooter(),
                       const SizedBox(height: 24),

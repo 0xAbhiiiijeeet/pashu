@@ -48,7 +48,6 @@ class _UploadCowScreenState extends State<UploadCowScreen> {
       if (images.isNotEmpty) {
         setState(() {
           _selectedImagePaths.addAll(images.map((img) => img.path));
-          // Limit to 5 images
           if (_selectedImagePaths.length > 5) {
             _selectedImagePaths.removeRange(5, _selectedImagePaths.length);
           }
@@ -118,7 +117,6 @@ class _UploadCowScreenState extends State<UploadCowScreen> {
     }
 
     setState(() => _isSubmitting = true);
-
     final provider = context.read<MarketplaceProvider>();
 
     final cowDetails = CowDetails(
@@ -137,7 +135,6 @@ class _UploadCowScreenState extends State<UploadCowScreen> {
       imagePaths: _selectedImagePaths,
     );
     setState(() => _isUploadingImages = false);
-
     setState(() => _isSubmitting = false);
 
     if (!mounted) return;
@@ -177,14 +174,7 @@ class _UploadCowScreenState extends State<UploadCowScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            _UploadHeroCard(
-              title: l10n.isHindi ? 'फोटो पहले जोड़ें' : 'Add photos first',
-              subtitle: l10n.isHindi
-                  ? 'साफ तस्वीरें डालें ताकि खरीदार तुरंत समझ सके कि आप ${_animalLabelHindi.toLowerCase()} बेच रहे हैं।'
-                  : 'Add clear photos first so buyers can instantly understand what you are selling.',
-            ),
-            const SizedBox(height: 16),
-
+            // 1. ANIMAL TYPE SELECTION
             Text(
               l10n.isHindi ? 'क्या बेच रहे हैं?' : 'What are you selling?',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
@@ -206,30 +196,22 @@ class _UploadCowScreenState extends State<UploadCowScreen> {
                     label: l10n.isHindi ? 'भैंस' : 'Buffalo',
                     icon: Icons.agriculture,
                     selected: _selectedAnimalType == 'buffalo',
-                    onTap: () =>
-                        setState(() => _selectedAnimalType = 'buffalo'),
+                    onTap: () => setState(() => _selectedAnimalType = 'buffalo'),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 24),
 
+            // 2. IMAGE PREVIEW SECTION (MOVED TO TOP)
             Text(
               l10n.isHindi ? 'तस्वीरें' : 'Photos',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
-            Text(
-              l10n.isHindi
-                  ? 'कम से कम 1 और अधिकतम 5 फोटो डालें। किसी फोटो पर टैप करके प्रीव्यू देखें।'
-                  : 'Add at least 1 and up to 5 photos. Tap any photo to preview it.',
-              style: TextStyle(color: Colors.grey[700], height: 1.4),
-            ),
-            const SizedBox(height: 12),
-
             if (_selectedImagePaths.isNotEmpty)
               SizedBox(
-                height: 156,
+                height: 140,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _selectedImagePaths.length,
@@ -240,72 +222,32 @@ class _UploadCowScreenState extends State<UploadCowScreen> {
                         GestureDetector(
                           onTap: () => _previewImage(_selectedImagePaths[index]),
                           child: Container(
-                            width: 132,
+                            width: 120,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(18),
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: Colors.grey[300]!),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
                             ),
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(18),
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  Image.file(
-                                    File(_selectedImagePaths[index]),
-                                    fit: BoxFit.cover,
-                                  ),
-                                  Positioned(
-                                    left: 8,
-                                    right: 8,
-                                    bottom: 8,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black.withValues(alpha: 0.55),
-                                        borderRadius: BorderRadius.circular(999),
-                                      ),
-                                      child: Text(
-                                        l10n.isHindi ? 'प्रीव्यू' : 'Preview',
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.file(
+                                File(_selectedImagePaths[index]),
+                                fit: BoxFit.cover,
                               ),
                             ),
                           ),
                         ),
                         Positioned(
-                          top: 8,
-                          right: 8,
+                          top: 4,
+                          right: 4,
                           child: GestureDetector(
                             onTap: () => _removeImage(index),
                             child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: Colors.red.shade600,
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(
-                                Icons.close,
-                                color: Colors.white,
-                                size: 16,
-                              ),
+                              child: const Icon(Icons.close, color: Colors.white, size: 14),
                             ),
                           ),
                         ),
@@ -316,47 +258,31 @@ class _UploadCowScreenState extends State<UploadCowScreen> {
               )
             else
               Container(
-                height: 156,
-                padding: const EdgeInsets.all(18),
+                height: 140,
+                width: double.infinity,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF7F8F2),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: const Color(0xFFD9DFC7)),
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey[300]!, style: BorderStyle.solid),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
-                      Icons.add_a_photo_outlined,
-                      size: 42,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(height: 10),
+                    Icon(Icons.camera_alt_outlined, color: Colors.grey[400], size: 40),
+                    const SizedBox(height: 8),
                     Text(
-                      l10n.isHindi
-                          ? '${_animalLabelHindi} की पहली फोटो जोड़ें'
-                          : 'Add the first photo of your $_animalLabel',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      l10n.isHindi
-                          ? 'अच्छी फोटो से आपकी लिस्ट जल्दी बिकती है।'
-                          : 'Good photos help your listing get noticed faster.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey[700]),
+                      l10n.isHindi ? 'कोई फोटो नहीं चुनी गई' : 'No photos selected',
+                      style: TextStyle(color: Colors.grey[600]),
                     ),
                   ],
                 ),
               ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
 
+            // 3. ADD IMAGES BUTTON (MOVED TO TOP)
             OutlinedButton.icon(
               onPressed: _selectedImagePaths.length < 5 ? _pickImages : null,
-              icon: const Icon(Icons.add_photo_alternate_outlined),
+              icon: const Icon(Icons.add_a_photo),
               label: Text(
                 _selectedImagePaths.isEmpty
                     ? l10n.addImages
@@ -365,39 +291,30 @@ class _UploadCowScreenState extends State<UploadCowScreen> {
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.primary,
                 side: const BorderSide(color: AppColors.primary),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
             const SizedBox(height: 24),
 
+            // 4. LISTING DETAILS
             Text(
               l10n.isHindi ? 'जानकारी भरें' : 'Listing details',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
 
+            // Breed
             TextFormField(
               controller: _breedController,
               decoration: InputDecoration(
                 labelText: l10n.breed,
                 hintText: _selectedAnimalType == 'buffalo'
-                    ? (l10n.isHindi
-                        ? 'जैसे, मुर्रा, जाफराबादी'
-                        : 'e.g., Murrah, Jaffarabadi')
+                    ? (l10n.isHindi ? 'जैसे, मुर्रा, जाफराबादी' : 'e.g., Murrah, Jaffarabadi')
                     : l10n.breedHint,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l10n.pleaseEnterBreed;
-                }
-                return null;
-              },
+              validator: (v) => (v == null || v.trim().isEmpty) ? l10n.pleaseEnterBreed : null,
             ),
             const SizedBox(height: 16),
 
@@ -407,20 +324,13 @@ class _UploadCowScreenState extends State<UploadCowScreen> {
               decoration: InputDecoration(
                 labelText: l10n.ageYears,
                 hintText: 'e.g., 4',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l10n.pleaseEnterAge;
-                }
-                final age = int.tryParse(value);
-                if (age == null || age <= 0) {
-                  return l10n.pleaseEnterValidAge;
-                }
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return l10n.pleaseEnterAge;
+                if (int.tryParse(v) == null || int.parse(v) <= 0) return l10n.pleaseEnterValidAge;
                 return null;
               },
             ),
@@ -432,20 +342,13 @@ class _UploadCowScreenState extends State<UploadCowScreen> {
               decoration: InputDecoration(
                 labelText: l10n.priceRupees,
                 hintText: 'e.g., 45000',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l10n.pleaseEnterPrice;
-                }
-                final price = double.tryParse(value);
-                if (price == null || price <= 0) {
-                  return l10n.pleaseEnterValidPrice;
-                }
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return l10n.pleaseEnterPrice;
+                if (double.tryParse(v) == null || double.parse(v) <= 0) return l10n.pleaseEnterValidPrice;
                 return null;
               },
             ),
@@ -457,23 +360,13 @@ class _UploadCowScreenState extends State<UploadCowScreen> {
               decoration: InputDecoration(
                 labelText: l10n.milkYieldLiters,
                 hintText: 'e.g., 12',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-              ],
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l10n.pleaseEnterYield;
-                }
-                final yield_ = double.tryParse(value);
-                if (yield_ == null || yield_ < 0) {
-                  return l10n.pleaseEnterValidYield;
-                }
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return l10n.pleaseEnterYield;
+                if (double.tryParse(v) == null || double.parse(v) < 0) return l10n.pleaseEnterValidYield;
                 return null;
               },
             ),
@@ -485,108 +378,40 @@ class _UploadCowScreenState extends State<UploadCowScreen> {
               decoration: InputDecoration(
                 labelText: l10n.description,
                 hintText: l10n.describeCow,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              maxLines: 4,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l10n.pleaseEnterDescription;
-                }
-                return null;
-              },
+              maxLines: 3,
+              validator: (v) => (v == null || v.trim().isEmpty) ? l10n.pleaseEnterDescription : null,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
 
             // Submit Button
             SizedBox(
-              height: 50,
+              height: 54,
               child: ElevatedButton(
                 onPressed: _isSubmitting ? null : _submitForm,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 child: _isSubmitting
                     ? Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            _isUploadingImages
-                                ? l10n.uploadingImages
-                                : l10n.submitting,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                        ],
-                      )
-                    : Text(
-                        l10n.submitForApproval,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w600),
-                      ),
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(
+                      height: 20, width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(_isUploadingImages ? l10n.uploadingImages : l10n.submitting),
+                  ],
+                )
+                    : Text(l10n.submitForApproval, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _UploadHeroCard extends StatelessWidget {
-  const _UploadHeroCard({
-    required this.title,
-    required this.subtitle,
-  });
-
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF707B3C), Color(0xFF8D9850)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.photo_library_outlined, color: Colors.white, size: 30),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 19,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            subtitle,
-            style: const TextStyle(color: Colors.white70, height: 1.45),
-          ),
-        ],
       ),
     );
   }
@@ -612,25 +437,25 @@ class _AnimalTypeCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFFF0F3E1) : Colors.white,
+          color: selected ? AppColors.primary.withOpacity(0.1) : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: selected ? AppColors.primary : const Color(0xFFD7DCC6),
-            width: selected ? 1.8 : 1,
+            width: selected ? 2 : 1,
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: selected ? AppColors.primary : Colors.grey[700]),
+            Icon(icon, color: selected ? AppColors.primary : Colors.grey[600]),
             const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
                 color: selected ? AppColors.primary : Colors.black87,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],

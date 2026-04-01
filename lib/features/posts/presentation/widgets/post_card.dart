@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../domain/models/post_model.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/posts_provider.dart';
@@ -8,11 +9,79 @@ import 'comment_section.dart';
 class PostCard extends StatelessWidget {
   final PostModel post;
 
+  static const Map<String, Map<String, String>> _categoryTranslations = {
+    'general': {
+      'en': 'General',
+      'hi': 'सामान्य',
+    },
+    'सामान्य': {
+      'en': 'General',
+      'hi': 'सामान्य',
+    },
+    'पशु रेट बढ़ाएँ': {
+      'en': 'Increase Animal Rate',
+      'hi': 'पशु रेट बढ़ाएँ',
+    },
+    'increase animal rate': {
+      'en': 'Increase Animal Rate',
+      'hi': 'पशु रेट बढ़ाएँ',
+    },
+    'नुकसान से बचें': {
+      'en': 'Avoid Losses',
+      'hi': 'नुकसान से बचें',
+    },
+    'avoid losses': {
+      'en': 'Avoid Losses',
+      'hi': 'नुकसान से बचें',
+    },
+    'कमाई बढ़ाएं': {
+      'en': 'Increase Earnings',
+      'hi': 'कमाई बढ़ाएं',
+    },
+    'increase earnings': {
+      'en': 'Increase Earnings',
+      'hi': 'कमाई बढ़ाएं',
+    },
+    'डेयरी विकास': {
+      'en': 'Dairy Development',
+      'hi': 'डेयरी विकास',
+    },
+    'dairy development': {
+      'en': 'Dairy Development',
+      'hi': 'डेयरी विकास',
+    },
+    'थन गर्म होना': {
+      'en': 'Udder Heat',
+      'hi': 'थन गर्म होना',
+    },
+    'udder heat': {
+      'en': 'Udder Heat',
+      'hi': 'थन गर्म होना',
+    },
+    'थन के कठोरता': {
+      'en': 'Udder Stiffness',
+      'hi': 'थन के कठोरता',
+    },
+    'udder stiffness': {
+      'en': 'Udder Stiffness',
+      'hi': 'थन के कठोरता',
+    },
+    'बच्चे में कमजोरी': {
+      'en': 'Weakness in Calf',
+      'hi': 'बच्चे में कमजोरी',
+    },
+    'weakness in calf': {
+      'en': 'Weakness in Calf',
+      'hi': 'बच्चे में कमजोरी',
+    },
+  };
+
   const PostCard({super.key, required this.post});
 
   @override
   Widget build(BuildContext context) {
     final authProvider = context.read<AuthProvider>();
+    final l10n = AppLocalizations.of(context);
     final userId = authProvider.user?.id ?? '';
     final isLiked = post.likes.contains(userId);
 
@@ -65,7 +134,7 @@ class PostCard extends StatelessWidget {
                 // Name
                 Expanded(
                   child: Text(
-                    '${post.askedByName ?? 'User'} ji\'s problem',
+                    l10n.userProblem(post.askedByName ?? 'User'),
                     style: const TextStyle(
                       color: Colors.black,
                       fontSize: 18,
@@ -84,7 +153,7 @@ class PostCard extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      post.category!,
+                      _localizedCategory(context, post.category!),
                       style: const TextStyle(
                         color: Color(0xFF666B42),
                         fontSize: 16,
@@ -135,8 +204,8 @@ class PostCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(28),
                     ),
                   ),
-                  child: const Text(
-                    'Animal friend answer',
+                  child: Text(
+                    l10n.animalFriendAnswer,
                     style: TextStyle(
                       color: Color(0xFF666B42),
                       fontSize: 18,
@@ -170,7 +239,7 @@ class PostCard extends StatelessWidget {
                   onTap: () => _handleLike(context, userId),
                   child: _ActionButton(
                     icon: isLiked ? Icons.favorite : Icons.favorite_border,
-                    label: '${post.likes.length} Likes',
+                    label: l10n.likes(post.likes.length),
                     iconColor: isLiked ? Colors.red : const Color(0xFF666B42),
                   ),
                 ),
@@ -180,7 +249,7 @@ class PostCard extends StatelessWidget {
                   onTap: () => _toggleComments(context),
                   child: _ActionButton(
                     icon: Icons.chat_bubble_outline,
-                    label: '${post.comments.length} Comment',
+                    label: l10n.commentsCount(post.comments.length),
                   ),
                 ),
               ],
@@ -204,6 +273,23 @@ class PostCard extends StatelessWidget {
   String _getInitial(String name) {
     if (name.isEmpty) return 'A';
     return name[0].toUpperCase();
+  }
+
+  String _localizedCategory(BuildContext context, String rawCategory) {
+    final l10n = AppLocalizations.of(context);
+    final normalized = rawCategory.trim();
+    final key = normalized.toLowerCase();
+
+    if (key == 'general' || normalized == 'सामान्य') {
+      return l10n.generalCategory;
+    }
+
+    final mapped = _categoryTranslations[normalized] ?? _categoryTranslations[key];
+    if (mapped == null) {
+      return rawCategory;
+    }
+
+    return l10n.isHindi ? mapped['hi']! : mapped['en']!;
   }
 
   void _handleLike(BuildContext context, String userId) {

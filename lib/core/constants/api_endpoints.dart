@@ -2,7 +2,7 @@ class ApiEndpoints {
   ApiEndpoints._();
 
   // API host is controlled here for the whole app.
-  static const String baseUrl = 'https://4wtzlrjn-5000.inc1.devtunnels.ms/';
+  static const String baseUrl = 'http://13.222.160.206:1234/';
 
   // Auth
   static const String sendOtp = '/api/auth/send-otp'; // Dev/test only

@@ -13,7 +13,7 @@ class PashuMitraNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 70,
+      height: 76,
       decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -30,12 +30,12 @@ class PashuMitraNavBar extends StatelessWidget {
           // Home Tab
           _NavBarItem(
             isSelected: currentIndex == 0,
-            onTap: () => onTap(0),
-            child: currentIndex == 0
+              onTap: () => onTap(0),
+              child: currentIndex == 0
                 ? Image.asset(
                     'assets/images/pashu_mitra_dark.png',
-                    width: 65,
-                    height: 65,
+                    width: 52,
+                    height: 52,
                     fit: BoxFit.contain,
                   )
                 : ColorFiltered(
@@ -45,8 +45,8 @@ class PashuMitraNavBar extends StatelessWidget {
                     ),
                     child: Image.asset(
                       'assets/images/pashu_mitra_dark.png',
-                      width: 65,
-                      height: 65,
+                      width: 52,
+                      height: 52,
                       fit: BoxFit.contain,
                     ),
                   ),
@@ -109,7 +109,7 @@ class _NavBarItem extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
         child: child,
       ),
     );

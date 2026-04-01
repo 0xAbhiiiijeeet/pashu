@@ -12,12 +12,14 @@ class SettingsService {
 
   String? _maintenanceText;
   bool _isMaintenanceMode = false;
+  bool _isOtpBypassed = false;
   DateTime? _lastFetchTime;
 
   static const Duration _cacheDuration = Duration(minutes: 5);
 
   String? get maintenanceText => _maintenanceText;
   bool get isMaintenanceMode => _isMaintenanceMode;
+  bool get isOtpBypassed => _isOtpBypassed;
 
   Future<void> fetchSettings() async {
     if (_lastFetchTime != null &&
@@ -37,6 +39,7 @@ class SettingsService {
         final settings = data['data'] as Map<String, dynamic>;
         _maintenanceText = settings['maintenanceText'] as String? ?? '';
         _isMaintenanceMode = settings['isMaintenanceMode'] as bool? ?? false;
+        _isOtpBypassed = settings['isOtpBypassed'] as bool? ?? false;
         _lastFetchTime = DateTime.now();
       }
     } catch (e) {
@@ -64,6 +67,7 @@ class SettingsService {
   void clearMaintenanceMode() {
     _maintenanceText = null;
     _isMaintenanceMode = false;
+    _isOtpBypassed = false;
     _lastFetchTime = null;
   }
 }

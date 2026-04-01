@@ -3,18 +3,27 @@ import '../services/remote_config_service.dart';
 
 class RemoteConfigProvider extends ChangeNotifier {
   final RemoteConfigService _remoteConfigService = RemoteConfigService.instance;
-  
+
   bool _isInitialized = false;
   bool _isLoading = false;
   String? _error;
   DateTime? _lastFetchTime;
+
+  RemoteConfigProvider() {
+    final values = _remoteConfigService.getAllValues();
+    _isInitialized = values['status'] == 'initialized';
+    final fetchTime = values['last_fetch_time']?.toString();
+    if (fetchTime != null) {
+      _lastFetchTime = DateTime.tryParse(fetchTime);
+    }
+  }
 
   // Getters
   bool get isInitialized => _isInitialized;
   bool get isLoading => _isLoading;
   String? get error => _error;
   DateTime? get lastFetchTime => _lastFetchTime;
-  
+
   String get baseUrl => _remoteConfigService.baseUrl;
   String get appUrl => _remoteConfigService.appUrl;
 

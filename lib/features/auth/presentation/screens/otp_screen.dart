@@ -19,6 +19,7 @@ class _OtpScreenState extends State<OtpScreen> {
   final TextEditingController _otpController = TextEditingController();
   bool _isButtonEnabled = false;
   bool _isProcessing = false;
+  bool _isSendingInitialOtp = false;
 
   static const int _resendSeconds = 28;
   int _secondsRemaining = _resendSeconds;
@@ -34,6 +35,32 @@ class _OtpScreenState extends State<OtpScreen> {
       });
     });
     _startTimer();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _sendInitialOtp();
+    });
+  }
+
+  Future<void> _sendInitialOtp() async {
+    if (_isSendingInitialOtp) return;
+    _isSendingInitialOtp = true;
+
+    final authProvider = context.read<AuthProvider>();
+    final success = await authProvider.sendOtp(widget.phoneNumber);
+
+    if (!mounted) return;
+
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            authProvider.errorMessage ??
+                'Unable to send OTP right now. Please try resend.',
+          ),
+        ),
+      );
+    }
+
+    _isSendingInitialOtp = false;
   }
 
   void _startTimer() {

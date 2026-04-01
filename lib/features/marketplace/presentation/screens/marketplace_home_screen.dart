@@ -123,7 +123,7 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> {
                 children: [
                   FeatureGridCard(
                     title: 'रेट जानें',
-                    subtitle: 'पशु buy और sell',
+                    subtitle: 'पशु रेट जानें',
                     icon: Icons.calculate_outlined,
                     bgColor: AppColors.mintGreen,
                     onTap: () {

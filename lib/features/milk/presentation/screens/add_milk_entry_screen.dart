@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../domain/models/customer_model.dart';
 import '../providers/milk_provider.dart';
 import '../widgets/common_widgets.dart';
@@ -46,12 +47,30 @@ class _AddMilkEntryScreenState extends State<AddMilkEntryScreen> {
   }
 
   Future<void> _saveEntry() async {
+    final isHindi = AppLocalizations.of(context).isHindi;
+
     if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    if (_selectedCustomerId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isHindi ? 'कृपया ग्राहक चुनें' : 'Please select a customer',
+          ),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+      return;
+    }
 
     if (_totalLiters == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('कम से कम एक दूध की मात्रा दर्ज करें'),
+        SnackBar(
+          content: Text(
+            isHindi
+                ? 'कम से कम एक दूध की मात्रा दर्ज करें'
+                : 'Enter at least one milk quantity',
+          ),
           backgroundColor: AppColors.warning,
         ),
       );
@@ -80,8 +99,12 @@ class _AddMilkEntryScreenState extends State<AddMilkEntryScreen> {
 
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('दूध एंट्री सफलतापूर्वक दर्ज की गई!'),
+          SnackBar(
+            content: Text(
+              isHindi
+                  ? 'दूध एंट्री सफलतापूर्वक सेव हुई'
+                  : 'Milk entry saved successfully',
+            ),
             backgroundColor: AppColors.success,
           ),
         );
@@ -89,7 +112,12 @@ class _AddMilkEntryScreenState extends State<AddMilkEntryScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(milkProvider.errorMessage ?? 'एंट्री दर्ज करने में त्रुटि हुई'),
+            content: Text(
+              milkProvider.errorMessage ??
+                  (isHindi
+                      ? 'एंट्री सेव करने में समस्या आई'
+                      : 'Failed to save entry'),
+            ),
             backgroundColor: AppColors.error,
           ),
         );
@@ -98,7 +126,9 @@ class _AddMilkEntryScreenState extends State<AddMilkEntryScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('त्रुटि: $e'),
+          content: Text(
+            isHindi ? 'त्रुटि: $e' : 'Error: $e',
+          ),
           backgroundColor: AppColors.error,
         ),
       );
@@ -109,14 +139,29 @@ class _AddMilkEntryScreenState extends State<AddMilkEntryScreen> {
     }
   }
 
+  Future<void> _openAddCustomer() async {
+    final added = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AddCustomerScreen(),
+      ),
+    );
+
+    if (added == true && mounted) {
+      await context.read<MilkProvider>().fetchCustomers();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isHindi = AppLocalizations.of(context).isHindi;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
-          'दूध एंट्री जोड़ें',
-          style: TextStyle(fontWeight: FontWeight.w600),
+        title: Text(
+          isHindi ? 'दूध एंट्री जोड़ें' : 'Add Milk Entry',
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         backgroundColor: AppColors.surface,
         foregroundColor: AppColors.textPrimary,
@@ -128,50 +173,53 @@ class _AddMilkEntryScreenState extends State<AddMilkEntryScreen> {
 
           if (customers.isEmpty && milkProvider.status == 'loaded') {
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.people_outline,
-                    size: 64,
-                    color: AppColors.textHint,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'पहले ग्राहक जोड़ें',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.people_outline,
+                      size: 64,
+                      color: AppColors.textHint,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'दूध एंट्री करने के लिए पहले कम से कम एक ग्राहक जोड़ना जरूरी है',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
+                    const SizedBox(height: 16),
+                    Text(
+                      isHindi
+                          ? 'पहले ग्राहक जोड़ें'
+                          : 'Add a customer first',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AddCustomerScreen(),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.person_add),
-                    label: const Text('ग्राहक जोड़ें'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.textOnPrimary,
+                    const SizedBox(height: 8),
+                    Text(
+                      isHindi
+                          ? 'दूध एंट्री करने से पहले कम से कम एक ग्राहक जोड़ना जरूरी है'
+                          : 'Please add at least one customer before creating a milk entry',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: _openAddCustomer,
+                      icon: const Icon(Icons.person_add),
+                      label: Text(
+                        isHindi ? 'ग्राहक जोड़ें' : 'Add Customer',
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.textOnPrimary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           }
@@ -187,19 +235,19 @@ class _AddMilkEntryScreenState extends State<AddMilkEntryScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         RichText(
-                          text: const TextSpan(
+                          text: TextSpan(
                             children: [
                               TextSpan(
-                                text: 'दूध ',
-                                style: TextStyle(
+                                text: isHindi ? 'दूध ' : 'Milk ',
+                                style: const TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.primary,
                                 ),
                               ),
                               TextSpan(
-                                text: 'एंट्री',
-                                style: TextStyle(
+                                text: isHindi ? 'एंट्री' : 'Entry',
+                                style: const TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.textPrimary,
@@ -209,9 +257,11 @@ class _AddMilkEntryScreenState extends State<AddMilkEntryScreen> {
                           ),
                         ),
                         const SizedBox(height: 6),
-                        const Text(
-                          'ग्राहक, शिफ्ट, तारीख और दूध की जानकारी दर्ज करें',
-                          style: TextStyle(
+                        Text(
+                          isHindi
+                              ? 'ग्राहक, शिफ्ट, तारीख और दूध की जानकारी दर्ज करें'
+                              : 'Enter customer, shift, date and milk details',
+                          style: const TextStyle(
                             fontSize: 13,
                             color: AppColors.textSecondary,
                           ),
@@ -220,13 +270,16 @@ class _AddMilkEntryScreenState extends State<AddMilkEntryScreen> {
                         _CustomerSelector(
                           customers: customers,
                           selectedCustomerId: _selectedCustomerId,
+                          isHindi: isHindi,
                           onChanged: (value) {
                             setState(() => _selectedCustomerId = value);
                           },
+                          onAddCustomer: _openAddCustomer,
                         ),
                         const SizedBox(height: 20),
                         _ShiftSelector(
                           value: _selectedShift,
+                          isHindi: isHindi,
                           onChanged: (value) {
                             if (value != null) {
                               setState(() => _selectedShift = value);
@@ -234,9 +287,9 @@ class _AddMilkEntryScreenState extends State<AddMilkEntryScreen> {
                           },
                         ),
                         const SizedBox(height: 20),
-                        const Text(
-                          'तारीख',
-                          style: TextStyle(
+                        Text(
+                          isHindi ? 'तारीख' : 'Date',
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                             color: AppColors.textPrimary,
@@ -251,9 +304,10 @@ class _AddMilkEntryScreenState extends State<AddMilkEntryScreen> {
                         ),
                         const SizedBox(height: 20),
                         MilkInputField(
-                          label: 'गाय का दूध (लीटर)',
-                          hint: 'जैसे: 2.5',
+                          label: isHindi ? 'गाय का दूध (लीटर)' : 'Cow Milk (Liters)',
+                          hint: isHindi ? 'जैसे: 2.5' : 'e.g. 2.5',
                           controller: _cowMilkController,
+                          isOptional: true,
                           inputFormatters: [
                             FilteringTextInputFormatter.allow(
                               RegExp(r'^\d*\.?\d{0,2}'),
@@ -263,7 +317,9 @@ class _AddMilkEntryScreenState extends State<AddMilkEntryScreen> {
                             if (value != null && value.isNotEmpty) {
                               final parsed = double.tryParse(value);
                               if (parsed == null || parsed < 0) {
-                                return 'सही मात्रा दर्ज करें';
+                                return isHindi
+                                    ? 'सही मात्रा दर्ज करें'
+                                    : 'Enter a valid quantity';
                               }
                             }
                             return null;
@@ -273,9 +329,12 @@ class _AddMilkEntryScreenState extends State<AddMilkEntryScreen> {
                         QuickEntryButtons(controller: _cowMilkController),
                         const SizedBox(height: 20),
                         MilkInputField(
-                          label: 'भैंस का दूध (लीटर)',
-                          hint: 'जैसे: 3.0',
+                          label: isHindi
+                              ? 'भैंस का दूध (लीटर)'
+                              : 'Buffalo Milk (Liters)',
+                          hint: isHindi ? 'जैसे: 3.0' : 'e.g. 3.0',
                           controller: _buffaloMilkController,
+                          isOptional: true,
                           inputFormatters: [
                             FilteringTextInputFormatter.allow(
                               RegExp(r'^\d*\.?\d{0,2}'),
@@ -285,7 +344,9 @@ class _AddMilkEntryScreenState extends State<AddMilkEntryScreen> {
                             if (value != null && value.isNotEmpty) {
                               final parsed = double.tryParse(value);
                               if (parsed == null || parsed < 0) {
-                                return 'सही मात्रा दर्ज करें';
+                                return isHindi
+                                    ? 'सही मात्रा दर्ज करें'
+                                    : 'Enter a valid quantity';
                               }
                             }
                             return null;
@@ -295,8 +356,10 @@ class _AddMilkEntryScreenState extends State<AddMilkEntryScreen> {
                         QuickEntryButtons(controller: _buffaloMilkController),
                         const SizedBox(height: 20),
                         MilkInputField(
-                          label: 'प्रति लीटर मूल्य (₹)',
-                          hint: 'जैसे: 60',
+                          label: isHindi
+                              ? 'प्रति लीटर मूल्य (₹)'
+                              : 'Price Per Liter (₹)',
+                          hint: isHindi ? 'जैसे: 60' : 'e.g. 60',
                           controller: _priceController,
                           inputFormatters: [
                             FilteringTextInputFormatter.allow(
@@ -305,88 +368,101 @@ class _AddMilkEntryScreenState extends State<AddMilkEntryScreen> {
                           ],
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'कृपया मूल्य दर्ज करें';
+                              return isHindi
+                                  ? 'कृपया मूल्य दर्ज करें'
+                                  : 'Please enter price';
                             }
                             final parsed = double.tryParse(value);
                             if (parsed == null || parsed <= 0) {
-                              return 'सही मूल्य दर्ज करें';
+                              return isHindi
+                                  ? 'सही मूल्य दर्ज करें'
+                                  : 'Enter a valid price';
                             }
                             return null;
                           },
                         ),
                         const SizedBox(height: 20),
-                        ValueListenableBuilder(
+                        ValueListenableBuilder<TextEditingValue>(
                           valueListenable: _cowMilkController,
-                          builder: (_, __, ___) => ValueListenableBuilder(
-                            valueListenable: _buffaloMilkController,
-                            builder: (_, __, ___) => ValueListenableBuilder(
-                              valueListenable: _priceController,
+                          builder: (_, __, ___) {
+                            return ValueListenableBuilder<TextEditingValue>(
+                              valueListenable: _buffaloMilkController,
                               builder: (_, __, ___) {
-                                if (_totalLiters == 0) {
-                                  return const SizedBox.shrink();
-                                }
-                                return Container(
-                                  padding: const EdgeInsets.all(14),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.mintGreen,
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                      color: AppColors.sage.withValues(alpha: 0.3),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                return ValueListenableBuilder<TextEditingValue>(
+                                  valueListenable: _priceController,
+                                  builder: (_, __, ___) {
+                                    if (_totalLiters == 0) {
+                                      return const SizedBox.shrink();
+                                    }
+
+                                    return Container(
+                                      padding: const EdgeInsets.all(14),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.mintGreen,
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: AppColors.sage.withValues(
+                                            alpha: 0.3,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
                                         children: [
-                                          const Text(
-                                            'कुल दूध',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: AppColors.textSecondary,
-                                            ),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                isHindi ? 'कुल दूध' : 'Total Milk',
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: AppColors.textSecondary,
+                                                ),
+                                              ),
+                                              Text(
+                                                isHindi
+                                                    ? '${_totalLiters.toStringAsFixed(2)} लीटर'
+                                                    : '${_totalLiters.toStringAsFixed(2)} liters',
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.primary,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          Text(
-                                            '${_totalLiters.toStringAsFixed(2)} लीटर',
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppColors.primary,
+                                          if (_totalAmount != null)
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.end,
+                                              children: [
+                                                Text(
+                                                  isHindi ? 'कुल राशि' : 'Total Amount',
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: AppColors.textSecondary,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  '₹${_totalAmount!.toStringAsFixed(2)}',
+                                                  style: const TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: AppColors.primary,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                          ),
                                         ],
                                       ),
-                                      if (_totalAmount != null)
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: [
-                                            const Text(
-                                              'कुल राशि',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: AppColors.textSecondary,
-                                              ),
-                                            ),
-                                            Text(
-                                              '₹${_totalAmount!.toStringAsFixed(2)}',
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                                color: AppColors.primary,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                    ],
-                                  ),
+                                    );
+                                  },
                                 );
                               },
-                            ),
-                          ),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -411,7 +487,9 @@ class _AddMilkEntryScreenState extends State<AddMilkEntryScreen> {
                             )
                           : const Icon(Icons.save_alt_outlined),
                       label: Text(
-                        _isLoading ? 'दर्ज हो रहा है...' : 'एंट्री दर्ज करें',
+                        _isLoading
+                            ? (isHindi ? 'सेव हो रहा है...' : 'Saving...')
+                            : (isHindi ? 'एंट्री सेव करें' : 'Save Entry'),
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -442,30 +520,44 @@ class _CustomerSelector extends StatelessWidget {
   const _CustomerSelector({
     required this.customers,
     required this.selectedCustomerId,
+    required this.isHindi,
     required this.onChanged,
+    required this.onAddCustomer,
   });
 
   final List<Customer> customers;
   final String? selectedCustomerId;
+  final bool isHindi;
   final ValueChanged<String?> onChanged;
+  final VoidCallback onAddCustomer;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'ग्राहक चुनें',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textPrimary,
-          ),
+        Row(
+          children: [
+            Text(
+              isHindi ? 'ग्राहक चुनें' : 'Select Customer',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const Spacer(),
+            TextButton.icon(
+              onPressed: onAddCustomer,
+              icon: const Icon(Icons.person_add, size: 18),
+              label: Text(isHindi ? 'नया जोड़ें' : 'Add New'),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          value: selectedCustomerId,
-          hint: const Text('ग्राहक चुनें'),
+          initialValue: selectedCustomerId,
+          hint: Text(isHindi ? 'ग्राहक चुनें' : 'Select customer'),
           decoration: InputDecoration(
             filled: true,
             fillColor: AppColors.surface,
@@ -498,7 +590,11 @@ class _CustomerSelector extends StatelessWidget {
               )
               .toList(),
           onChanged: onChanged,
-          validator: (value) => value == null ? 'कृपया ग्राहक चुनें' : null,
+          validator: (value) => value == null
+              ? (isHindi
+                  ? 'कृपया ग्राहक चुनें'
+                  : 'Please select a customer')
+              : null,
         ),
       ],
     );
@@ -508,10 +604,12 @@ class _CustomerSelector extends StatelessWidget {
 class _ShiftSelector extends StatelessWidget {
   const _ShiftSelector({
     required this.value,
+    required this.isHindi,
     required this.onChanged,
   });
 
   final String value;
+  final bool isHindi;
   final ValueChanged<String?> onChanged;
 
   @override
@@ -519,9 +617,9 @@ class _ShiftSelector extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'शिफ्ट',
-          style: TextStyle(
+        Text(
+          isHindi ? 'शिफ्ट' : 'Shift',
+          style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
             color: AppColors.textPrimary,
@@ -529,7 +627,7 @@ class _ShiftSelector extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          value: value,
+          initialValue: value,
           decoration: InputDecoration(
             filled: true,
             fillColor: AppColors.surface,
@@ -553,9 +651,15 @@ class _ShiftSelector extends StatelessWidget {
               ),
             ),
           ),
-          items: const [
-            DropdownMenuItem(value: 'Morning', child: Text('Morning')),
-            DropdownMenuItem(value: 'Evening', child: Text('Evening')),
+          items: [
+            DropdownMenuItem(
+              value: 'Morning',
+              child: Text(isHindi ? 'सुबह' : 'Morning'),
+            ),
+            DropdownMenuItem(
+              value: 'Evening',
+              child: Text(isHindi ? 'शाम' : 'Evening'),
+            ),
           ],
           onChanged: onChanged,
         ),

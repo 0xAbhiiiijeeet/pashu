@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../providers/milk_provider.dart';
 import '../widgets/common_widgets.dart';
 
@@ -45,10 +46,16 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
       if (!mounted) return;
 
+      final isHindi = AppLocalizations.of(context).isHindi;
+
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('ग्राहक सफलतापूर्वक जोड़ा गया!'),
+          SnackBar(
+            content: Text(
+              isHindi
+                  ? 'ग्राहक सफलतापूर्वक जोड़ा गया'
+                  : 'Customer added successfully',
+            ),
             backgroundColor: AppColors.success,
           ),
         );
@@ -57,7 +64,10 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              milkProvider.errorMessage ?? 'ग्राहक जोड़ने में त्रुटि हुई',
+              milkProvider.errorMessage ??
+                  (isHindi
+                      ? 'ग्राहक जोड़ने में समस्या आई'
+                      : 'Failed to add customer'),
             ),
             backgroundColor: AppColors.error,
           ),
@@ -65,9 +75,13 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
       }
     } catch (e) {
       if (!mounted) return;
+
+      final isHindi = AppLocalizations.of(context).isHindi;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('त्रुटि: $e'),
+          content: Text(
+            isHindi ? 'त्रुटि: $e' : 'Error: $e',
+          ),
           backgroundColor: AppColors.error,
         ),
       );
@@ -80,12 +94,14 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isHindi = AppLocalizations.of(context).isHindi;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
-          'ग्राहक जोड़ें',
-          style: TextStyle(fontWeight: FontWeight.w600),
+        title: Text(
+          isHindi ? 'ग्राहक जोड़ें' : 'Add Customer',
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         backgroundColor: AppColors.surface,
         foregroundColor: AppColors.textPrimary,
@@ -102,19 +118,19 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     RichText(
-                      text: const TextSpan(
+                      text: TextSpan(
                         children: [
                           TextSpan(
-                            text: 'नया ग्राहक ',
-                            style: TextStyle(
+                            text: isHindi ? 'नया ग्राहक ' : 'New ',
+                            style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
                               color: AppColors.primary,
                             ),
                           ),
                           TextSpan(
-                            text: 'जोड़ें',
-                            style: TextStyle(
+                            text: isHindi ? 'जोड़ें' : 'Customer',
+                            style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
                               color: AppColors.textPrimary,
@@ -124,17 +140,19 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    const Text(
-                      'दूध लेने वाले का नाम, फोन, पता और पसंद दर्ज करें',
-                      style: TextStyle(
+                    Text(
+                      isHindi
+                          ? 'ग्राहक का नाम, फोन नंबर, पता और दूध की पसंद दर्ज करें'
+                          : 'Enter customer name, phone number, address and milk preference',
+                      style: const TextStyle(
                         fontSize: 13,
                         color: AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 28),
                     MilkInputField(
-                      label: 'ग्राहक का नाम',
-                      hint: 'जैसे: राजेश कुमार',
+                      label: isHindi ? 'ग्राहक का नाम' : 'Customer Name',
+                      hint: isHindi ? 'जैसे: राजेश कुमार' : 'e.g. Rajesh Kumar',
                       controller: _nameController,
                       keyboardType: TextInputType.name,
                       inputFormatters: [
@@ -144,46 +162,54 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                       ],
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'कृपया ग्राहक का नाम दर्ज करें';
+                          return isHindi
+                              ? 'कृपया ग्राहक का नाम दर्ज करें'
+                              : 'Please enter customer name';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 20),
                     MilkInputField(
-                      label: 'ग्राहक का फोन नंबर',
-                      hint: 'जैसे: 9876543212',
+                      label: isHindi ? 'फोन नंबर' : 'Phone Number',
+                      hint: isHindi ? 'जैसे: 9876543212' : 'e.g. 9876543212',
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
                       maxLength: 10,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'कृपया फोन नंबर दर्ज करें';
+                          return isHindi
+                              ? 'कृपया फोन नंबर दर्ज करें'
+                              : 'Please enter phone number';
                         }
                         if (value.length != 10) {
-                          return '10 अंकों का मोबाइल नंबर दर्ज करें';
+                          return isHindi
+                              ? 'कृपया 10 अंकों का मोबाइल नंबर दर्ज करें'
+                              : 'Please enter a 10-digit mobile number';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 20),
                     MilkInputField(
-                      label: 'पता',
-                      hint: 'जैसे: Village A',
+                      label: isHindi ? 'पता' : 'Address',
+                      hint: isHindi ? 'जैसे: Village A' : 'e.g. Village A',
                       controller: _addressController,
                       keyboardType: TextInputType.streetAddress,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'कृपया पता दर्ज करें';
+                          return isHindi
+                              ? 'कृपया पता दर्ज करें'
+                              : 'Please enter address';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 20),
-                    const Text(
-                      'दूध पसंद',
-                      style: TextStyle(
+                    Text(
+                      isHindi ? 'दूध की पसंद' : 'Milk Preference',
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                         color: AppColors.textPrimary,
@@ -191,7 +217,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                     ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
-                      value: _milkTypePreference,
+                      initialValue: _milkTypePreference,
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: AppColors.surface,
@@ -215,13 +241,19 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                           ),
                         ),
                       ),
-                      items: const [
-                        DropdownMenuItem(value: 'Cow', child: Text('Cow')),
+                      items: [
+                        DropdownMenuItem(
+                          value: 'Cow',
+                          child: Text(isHindi ? 'गाय' : 'Cow'),
+                        ),
                         DropdownMenuItem(
                           value: 'Buffalo',
-                          child: Text('Buffalo'),
+                          child: Text(isHindi ? 'भैंस' : 'Buffalo'),
                         ),
-                        DropdownMenuItem(value: 'Both', child: Text('Both')),
+                        DropdownMenuItem(
+                          value: 'Both',
+                          child: Text(isHindi ? 'दोनों' : 'Both'),
+                        ),
                       ],
                       onChanged: (value) {
                         if (value != null) {
@@ -252,7 +284,9 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                         )
                       : const Icon(Icons.check_circle_outline),
                   label: Text(
-                    _isLoading ? 'दर्ज हो रहा है...' : 'दर्ज करें',
+                    _isLoading
+                        ? (isHindi ? 'सेव हो रहा है...' : 'Saving...')
+                        : (isHindi ? 'सेव करें' : 'Save'),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../constants/api_endpoints.dart';
+import '../services/remote_config_service.dart';
 import '../storage/storage_service.dart';
 import 'interceptors/auth_interceptor.dart';
 import 'interceptors/error_interceptor.dart';
@@ -17,9 +18,13 @@ class DioClient {
   Dio get dio => _dio;
 
   void init(StorageService storageService) {
+    final configuredBaseUrl = RemoteConfigService.instance.baseUrl;
+
     _dio = Dio(
       BaseOptions(
-        baseUrl: ApiEndpoints.baseUrl,
+        baseUrl: configuredBaseUrl.isNotEmpty
+            ? configuredBaseUrl
+            : ApiEndpoints.baseUrl,
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
         sendTimeout: const Duration(seconds: 15),

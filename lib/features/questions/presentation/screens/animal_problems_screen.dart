@@ -12,6 +12,19 @@ import '../../../problems/presentation/providers/problems_provider.dart';
 import '../../../home/presentation/widgets/booking_bottom_sheet.dart';
 import '../../../home/presentation/widgets/sticky_chip_header.dart';
 
+String _problemImageUrl(String? imagePath) {
+  if (imagePath == null || imagePath.isEmpty) return '';
+  if (imagePath.startsWith('http')) return imagePath;
+
+  final normalizedBase = ApiEndpoints.baseUrl.endsWith('/')
+      ? ApiEndpoints.baseUrl.substring(0, ApiEndpoints.baseUrl.length - 1)
+      : ApiEndpoints.baseUrl;
+  final normalizedPath =
+      imagePath.startsWith('/') ? imagePath : '/$imagePath';
+
+  return '$normalizedBase$normalizedPath';
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Embeddable body — used by both AnimalProblemsScreen and HomeScreen tab 1
 // ─────────────────────────────────────────────────────────────────────────────
@@ -311,7 +324,7 @@ class _SmallChip extends StatelessWidget {
               child: problem.image != null && problem.image!.isNotEmpty
                   ? ClipOval(
                       child: CachedNetworkImage(
-                        imageUrl: '${ApiEndpoints.baseUrl}${problem.image}',
+                        imageUrl: _problemImageUrl(problem.image),
                         width: 52,
                         height: 52,
                         fit: BoxFit.cover,

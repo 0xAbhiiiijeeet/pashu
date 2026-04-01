@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/localization/locale_provider.dart';
 import '../../../auth/domain/models/user_model.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
@@ -195,10 +196,11 @@ class _ProfileFormState extends State<ProfileForm> {
     // Build profileDetails - only include non-null fields
     final profileDetails = <String, dynamic>{};
     
-    if (_selectedLanguage != null) {
-      profileDetails['language'] = _mapLanguageToBackend(_selectedLanguage!);
-      debugPrint('🌐 Adding language to profileDetails: ${profileDetails['language']}');
-    }
+    final selectedBackendLanguage = _selectedLanguage != null
+        ? _mapLanguageToBackend(_selectedLanguage!)
+        : _inferBackendLanguageFromLocale();
+    profileDetails['language'] = selectedBackendLanguage;
+    debugPrint('Selected language for profileDetails: $selectedBackendLanguage');
     // Only send address if it's not locked
     if (widget.user.profileDetails?.addressLocked != true && 
         _addressController.text.trim().isNotEmpty) {
@@ -253,6 +255,10 @@ class _ProfileFormState extends State<ProfileForm> {
     }
 
     if (success) {
+      final localeProvider = context.read<LocaleProvider>();
+      await localeProvider.setLocale(
+        Locale(selectedBackendLanguage == 'Hindi' ? 'hi' : 'en', ''),
+      );
       widget.onSave();
     } else {
       // Show error message to user
@@ -285,7 +291,7 @@ class _ProfileFormState extends State<ProfileForm> {
     final experienceOptions = l10n.experienceOptions;
     
     // Map stored values to current language options
-    String? mappedLanguage = _selectedLanguage;
+    String? mappedLanguage = _mapLanguageToDisplay(_selectedLanguage);
     String? mappedWork = _selectedWork;
     String? mappedEducation = _selectedEducation;
     String? mappedExperience = _mapExperienceToDisplay(_selectedExperience);
@@ -822,27 +828,50 @@ class _ProfileFormState extends State<ProfileForm> {
     return 'XXXX XXXX ${phone.substring(phone.length - 2)}';
   }
 
+  String _inferBackendLanguageFromLocale() {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    return languageCode == 'en' ? 'English' : 'Hindi';
+  }
+
   // Mapping functions to convert display strings to backend enum values
   String _mapLanguageToBackend(String displayValue) {
+    final normalized = displayValue.trim().toLowerCase();
+    debugPrint('Mapping language: "$displayValue"');
+
+    if (normalized == 'english' || normalized == 'अंग्रेज़ी') {
+      return 'English';
+    }
+
+    if (normalized == 'hindi' || normalized == 'हिंदी') {
+      return 'Hindi';
+    }
+
+    return _inferBackendLanguageFromLocale();
+  }
+
+  String? _mapLanguageToDisplay(String? storedValue) {
+    if (storedValue == null || storedValue.isEmpty) return null;
+
     final l10n = AppLocalizations.of(context);
-    debugPrint('🔄 Mapping language: "$displayValue" (isHindi: ${l10n.isHindi})');
-    
+
     if (l10n.isHindi) {
-      switch (displayValue) {
-        case 'अंग्रेज़ी': 
-          debugPrint('✅ Mapped अंग्रेज़ी → English');
-          return 'English';
-        case 'हिंदी': 
-          debugPrint('✅ Mapped हिंदी → Hindi');
-          return 'Hindi';
-        default: 
-          debugPrint('⚠️ No mapping found for "$displayValue", using as-is');
-          return displayValue;
+      switch (storedValue) {
+        case 'English':
+          return 'अंग्रेज़ी';
+        case 'Hindi':
+          return 'हिंदी';
+        default:
+          return storedValue;
       }
-    } else {
-      // English display values are already backend values
-      debugPrint('✅ English mode, using value as-is: "$displayValue"');
-      return displayValue;
+    }
+
+    switch (storedValue) {
+      case 'अंग्रेज़ी':
+        return 'English';
+      case 'हिंदी':
+        return 'Hindi';
+      default:
+        return storedValue;
     }
   }
 

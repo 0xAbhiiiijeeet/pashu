@@ -16,6 +16,20 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(keystorePropertiesFile.inputStream())
 }
 
+fun resolveKeystoreFile(pathValue: String): File {
+    val configured = File(pathValue)
+    if (configured.isAbsolute) {
+        return configured
+    }
+
+    val appRelative = project.file(pathValue)
+    if (appRelative.exists()) {
+        return appRelative
+    }
+
+    return rootProject.file(pathValue)
+}
+
 android {
     namespace = "com.pashumitra.app"
     compileSdk = flutter.compileSdkVersion
@@ -48,7 +62,7 @@ android {
             create("release") {
                 keyAlias = keystoreProperties["keyAlias"] as String
                 keyPassword = keystoreProperties["keyPassword"] as String
-                storeFile = file(keystoreProperties["storeFile"] as String)
+                storeFile = resolveKeystoreFile(keystoreProperties["storeFile"] as String)
                 storePassword = keystoreProperties["storePassword"] as String
             }
         }
@@ -63,6 +77,7 @@ android {
             isShrinkResources = false
         }
     }
+
 }
 
 flutter {

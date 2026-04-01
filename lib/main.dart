@@ -71,6 +71,27 @@ Future<void> main() async {
   final storageService = StorageService(secureStorage);
 
   try {
+    debugPrint('🔥 Initializing Firebase...');
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    ).timeout(const Duration(seconds: 10));
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    debugPrint('✅ Firebase initialized successfully');
+  } catch (e) {
+    debugPrint('❌ Firebase init timeout or failed: $e');
+  }
+
+  try {
+    await RemoteConfigService.instance.initialize().timeout(
+      const Duration(seconds: 8),
+    );
+    debugPrint('✅ Remote Config initialized successfully');
+    debugPrint('📡 Base URL: ${RemoteConfigService.instance.baseUrl}');
+  } catch (e) {
+    debugPrint('❌ Remote Config init timeout or failed: $e');
+  }
+
+  try {
     await storageService.init().timeout(const Duration(seconds: 5));
     debugPrint('Storage initialized successfully');
   } catch (e) {
@@ -86,30 +107,6 @@ Future<void> main() async {
 
 Future<void> _initializeBackgroundServices() async {
   debugPrint('Starting background service initialization...');
-
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    ).timeout(const Duration(seconds: 10));
-    debugPrint('Firebase initialized successfully');
-  } catch (e) {
-    debugPrint('Firebase init timeout or failed: $e');
-  }
-
-  try {
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  } catch (e) {
-    debugPrint('Firebase background handler setup failed: $e');
-  }
-
-  try {
-    await RemoteConfigService.instance.initialize().timeout(
-      const Duration(seconds: 8),
-    );
-    debugPrint('Remote Config initialized successfully');
-  } catch (e) {
-    debugPrint('Remote Config init timeout or failed: $e');
-  }
 
   try {
     await NotificationService.instance.initialize().timeout(
@@ -134,7 +131,7 @@ class PashuMitraApp extends StatelessWidget {
           create: (_) => LocaleProvider(storageService),
         ),
         ChangeNotifierProvider<RemoteConfigProvider>(
-          create: (_) => RemoteConfigProvider()..initialize(),
+          create: (_) => RemoteConfigProvider(),
         ),
         ChangeNotifierProvider<SettingsProvider>(
           create: (_) => SettingsProvider(),
@@ -241,5 +238,4 @@ class _AuthGate extends StatelessWidget {
     return const HomeScreen();
   }
 }
-
 

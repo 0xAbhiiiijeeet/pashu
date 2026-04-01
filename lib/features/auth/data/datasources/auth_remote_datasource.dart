@@ -58,12 +58,17 @@ class AuthRemoteDataSource {
     String phoneNumber,
     String otp,
   ) async {
+    debugPrint('──── VERIFY OTP API ─────────────');
+    debugPrint('Phone: $phoneNumber');
+    debugPrint('OTP: $otp');
     final response = await _dioClient.post(
       ApiEndpoints.verifyOtp,
       data: {'phoneNumber': phoneNumber, 'otp': otp},
     );
     debugPrint('verify-otp response status: ${response.statusCode}');
+    debugPrint('verify-otp response type: ${response.data.runtimeType}');
     debugPrint('verify-otp response data: ${response.data}');
+    debugPrint('────────────────────────────────');
     return response.data as Map<String, dynamic>;
   }
 

@@ -12,6 +12,7 @@ class SettingsProvider extends ChangeNotifier {
   
   String? get maintenanceText => _settingsService.maintenanceText;
   bool get isMaintenanceMode => _settingsService.isMaintenanceMode;
+  bool get isOtpBypassed => _settingsService.isOtpBypassed;
 
   /// Fetch settings
   Future<void> fetchSettings() async {

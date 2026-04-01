@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/localization/locale_provider.dart';
 import '../../../../core/services/force_update_service.dart';
 import '../../../../core/network/dio_client.dart';
@@ -49,22 +50,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _checkForUpdates() async {
     final localeProvider = context.read<LocaleProvider>();
     final isHindi = localeProvider.locale.languageCode == 'hi';
+    final l10n = AppLocalizations.of(context);
     
     try {
       // Show loading
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
+        builder: (context) => Center(
           child: Card(
             child: Padding(
-              padding: EdgeInsets.all(24),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircularProgressIndicator(color: Color(0xFF666B42)),
-                  SizedBox(height: 16),
-                  Text('Checking for updates...'),
+                  const CircularProgressIndicator(color: Color(0xFF666B42)),
+                  const SizedBox(height: 16),
+                  Text(l10n.checkingForUpdates),
                 ],
               ),
             ),
@@ -92,7 +94,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               content: Text(
                 isHindi 
                   ? 'आपका ऐप अप टू डेट है!'
-                  : 'Your app is up to date!',
+                  : l10n.appUpToDate,
               ),
               backgroundColor: const Color(0xFF666B42),
             ),
@@ -110,7 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             content: Text(
               isHindi 
                 ? 'अपडेट जांचने में असमर्थ। कृपया दोबारा कोशिश करें।'
-                : 'Unable to check for updates. Please try again.',
+                : l10n.unableToCheckUpdates,
             ),
             backgroundColor: Colors.red,
           ),
@@ -121,6 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _refreshProfile() async {
     if (_isRefreshing) return;
+    final l10n = AppLocalizations.of(context);
     
     setState(() => _isRefreshing = true);
     
@@ -139,7 +142,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             content: Text(
               authProvider.user?.profileDetails?.language == 'Hindi'
                   ? 'प्रोफाइल अपडेट की गई'
-                  : 'Profile refreshed',
+                  : l10n.profileRefreshed,
             ),
             backgroundColor: const Color(0xFF666B42),
             duration: const Duration(seconds: 1),
@@ -155,7 +158,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             content: Text(
               authProvider.user?.profileDetails?.language == 'Hindi'
                   ? 'प्रोफाइल रिफ्रेश करने में असमर्थ। कृपया दोबारा कोशिश करें।'
-                  : 'Unable to refresh your profile. Please try again.',
+                  : l10n.unableToRefreshProfile,
             ),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 2),
@@ -173,6 +176,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final localeProvider = context.watch<LocaleProvider>();
+    final l10n = AppLocalizations.of(context);
     final user = authProvider.user;
     final isHindi = localeProvider.locale.languageCode == 'hi';
 
@@ -249,45 +253,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           actions: [
             if (!_isEditing)
-              GestureDetector(
-                onTap: () => localeProvider.toggleLanguage(),
-                child: Container(
-                  margin: const EdgeInsets.only(right: 16),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  constraints: const BoxConstraints(
-                    minHeight: 40, // Responsive height
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFCAB78F),
-                    borderRadius: BorderRadius.circular(23),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'En',
-                        style: TextStyle(
-                          color: isHindi ? Colors.black : const Color(0xFF666B42),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Container(
-                        width: 1,
-                        height: 20,
-                        margin: const EdgeInsets.symmetric(horizontal: 8),
-                        color: Colors.black26,
-                      ),
-                      Text(
-                        'हिं',
-                        style: TextStyle(
-                          color: isHindi ? const Color(0xFF666B42) : Colors.black,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
+              Container(
+                margin: const EdgeInsets.only(right: 16),
+                padding: const EdgeInsets.all(4),
+                constraints: const BoxConstraints(minHeight: 40),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCAB78F),
+                  borderRadius: BorderRadius.circular(23),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _LanguageChip(
+                      label: 'English',
+                      isSelected: !isHindi,
+                      onTap: () => localeProvider.setLocale(const Locale('en', '')),
+                    ),
+                    _LanguageChip(
+                      label: 'हिंदी',
+                      isSelected: isHindi,
+                      onTap: () => localeProvider.setLocale(const Locale('hi', '')),
+                    ),
+                  ],
                 ),
               ),
           ],
@@ -405,6 +392,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
         style: TextStyle(
           color: Color(0xFF9C9C9C),
           fontSize: 20,
+        ),
+      ),
+    );
+  }
+}
+
+class _LanguageChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _LanguageChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? const Color(0xFF666B42) : Colors.black,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );

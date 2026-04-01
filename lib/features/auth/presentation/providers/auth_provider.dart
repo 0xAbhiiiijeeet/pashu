@@ -210,6 +210,10 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> verifyOtp(String phoneNumber, String otp) async {
     _setLoading();
     try {
+      debugPrint('════ VERIFY OTP FLOW ════════════');
+      debugPrint('Input phone: $phoneNumber');
+      debugPrint('Input otp: $otp');
+
       // Try Firebase verification if we have a verification ID
       if (_firebaseVerificationId != null) {
         debugPrint('🔥 Attempting Firebase OTP verification...');
@@ -226,11 +230,16 @@ class AuthProvider extends ChangeNotifier {
       // Fallback to hardcoded OTP verification
       debugPrint('📱 Using hardcoded OTP verification');
       final result = await _dataSource.verifyOtp(phoneNumber, otp);
+      debugPrint('Raw verifyOtp result: $result');
+      debugPrint('Raw verifyOtp keys: ${result.keys.toList()}');
       final dataObj = result.containsKey('data') ? result['data'] as Map<String, dynamic> : result;
+      debugPrint('Parsed data object: $dataObj');
+      debugPrint('Parsed data object keys: ${dataObj.keys.toList()}');
       final token = dataObj['token'] as String;
       final userData = dataObj['user'] as Map<String, dynamic>;
       debugPrint('✅ Parsed verify-otp token length: ${token.length}');
       debugPrint('✅ Parsed verify-otp user keys: ${userData.keys.toList()}');
+      debugPrint('✅ Parsed verify-otp user data: $userData');
 
       // Save token securely
       await _storageService.saveToken(token);
@@ -265,11 +274,20 @@ class AuthProvider extends ChangeNotifier {
       _status = 'authenticated';
       _errorMessage = null;
       notifyListeners();
+      debugPrint('════ VERIFY OTP SUCCESS ═════════');
       return true;
     } on DioException catch (e) {
+      debugPrint('════ VERIFY OTP DIO ERROR ═══════');
+      debugPrint('Type: ${e.type}');
+      debugPrint('Message: ${e.message}');
+      debugPrint('Status: ${e.response?.statusCode}');
+      debugPrint('Response: ${e.response?.data}');
+      debugPrint('Error object: ${e.error}');
       _setError(_extractDioError(e));
       return false;
     } catch (e) {
+      debugPrint('════ VERIFY OTP ERROR ═══════════');
+      debugPrint('Error: $e');
       _setError(e.toString());
       return false;
     }

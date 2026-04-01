@@ -111,13 +111,14 @@ class _MilkCalculatorScreenState extends State<MilkCalculatorScreen> {
 
     if (!mounted) return;
     setState(() => _isSaving = false);
+    final l10n = AppLocalizations.of(context);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           success
-              ? 'Record saved successfully!'
-              : (provider.errorMessage ?? 'Failed to save record'),
+              ? l10n.saveRecord
+              : (provider.errorMessage ?? l10n.failedToSaveRecord),
         ),
         backgroundColor: success ? Colors.green : Colors.red,
       ),
@@ -158,7 +159,7 @@ class _MilkCalculatorScreenState extends State<MilkCalculatorScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.book),
-            tooltip: 'दूध खाता',
+            tooltip: l10n.milkKhata,
             onPressed: () {
               Navigator.push(
                 context,
@@ -198,8 +199,8 @@ class _MilkCalculatorScreenState extends State<MilkCalculatorScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                'Enter Details',
+                              Text(
+                                l10n.enterDetails,
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -215,7 +216,7 @@ class _MilkCalculatorScreenState extends State<MilkCalculatorScreen> {
                                   );
                                 },
                                 icon: const Icon(Icons.book, size: 16),
-                                label: const Text('दूध खाता'),
+                                label: Text(l10n.milkKhata),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: AppColors.primary,
                                   side: const BorderSide(
@@ -236,7 +237,7 @@ class _MilkCalculatorScreenState extends State<MilkCalculatorScreen> {
                               FilteringTextInputFormatter.digitsOnly,
                             ],
                             decoration: InputDecoration(
-                              labelText: 'Number of Animals',
+                              labelText: l10n.numberOfAnimals,
                               prefixIcon: const Icon(Icons.pets),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -244,11 +245,11 @@ class _MilkCalculatorScreenState extends State<MilkCalculatorScreen> {
                             ),
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
-                                return 'Required';
+                                return l10n.required;
                               }
                               final count = int.tryParse(value);
                               if (count == null || count <= 0) {
-                                return 'Enter valid number';
+                                return l10n.enterValidNumber;
                               }
                               return null;
                             },
@@ -265,7 +266,7 @@ class _MilkCalculatorScreenState extends State<MilkCalculatorScreen> {
                               ),
                             ],
                             decoration: InputDecoration(
-                              labelText: 'Avg Milk per Animal (L)',
+                              labelText: l10n.avgMilkPerAnimal,
                               prefixIcon: const Icon(Icons.water_drop),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -273,11 +274,11 @@ class _MilkCalculatorScreenState extends State<MilkCalculatorScreen> {
                             ),
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
-                                return 'Required';
+                                return l10n.required;
                               }
                               final milk = double.tryParse(value);
                               if (milk == null || milk < 0) {
-                                return 'Enter valid amount';
+                                return l10n.enterValidAmount;
                               }
                               return null;
                             },
@@ -294,7 +295,7 @@ class _MilkCalculatorScreenState extends State<MilkCalculatorScreen> {
                               ),
                             ],
                             decoration: InputDecoration(
-                              labelText: 'Home Consumption (L)',
+                              labelText: l10n.homeConsumption,
                               prefixIcon: const Icon(Icons.home),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -302,11 +303,11 @@ class _MilkCalculatorScreenState extends State<MilkCalculatorScreen> {
                             ),
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
-                                return 'Required';
+                                return l10n.required;
                               }
                               final consumption = double.tryParse(value);
                               if (consumption == null || consumption < 0) {
-                                return 'Enter valid amount';
+                                return l10n.enterValidAmount;
                               }
                               return null;
                             },
@@ -323,7 +324,7 @@ class _MilkCalculatorScreenState extends State<MilkCalculatorScreen> {
                               ),
                             ],
                             decoration: InputDecoration(
-                              labelText: 'Price per Liter (Rs)',
+                              labelText: l10n.pricePerLiter,
                               prefixIcon: const Icon(Icons.currency_rupee),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -331,11 +332,11 @@ class _MilkCalculatorScreenState extends State<MilkCalculatorScreen> {
                             ),
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
-                                return 'Required';
+                                return l10n.required;
                               }
                               final price = double.tryParse(value);
                               if (price == null || price <= 0) {
-                                return 'Enter valid price';
+                                return l10n.enterValidPrice;
                               }
                               return null;
                             },
@@ -378,8 +379,8 @@ class _MilkCalculatorScreenState extends State<MilkCalculatorScreen> {
                               ),
                             ),
                           )
-                        : const Text(
-                            'Save Record',
+                        : Text(
+                            l10n.saveRecord,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -407,6 +408,8 @@ class _ResultsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Card(
       elevation: 4,
       color: AppColors.primary.withValues(alpha: 0.1),
@@ -421,8 +424,8 @@ class _ResultsCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Results',
+                Text(
+                  l10n.results,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -431,31 +434,31 @@ class _ResultsCard extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.refresh),
                   onPressed: onReset,
-                  tooltip: 'New Calculation',
+                  tooltip: l10n.newCalculation,
                 ),
               ],
             ),
             const Divider(),
             _ResultRow(
-              label: 'Total Milk Produced',
+              label: l10n.totalMilkProduced,
               value: '${calculation.totalMilkProduced.toStringAsFixed(1)} L',
             ),
             _ResultRow(
-              label: 'Home Consumption',
+              label: l10n.homeConsumption,
               value: '${calculation.homeConsumption.toStringAsFixed(1)} L',
             ),
             _ResultRow(
-              label: 'Milk Sold',
+              label: l10n.milkSold,
               value: '${calculation.totalMilkSold.toStringAsFixed(1)} L',
             ),
             const Divider(),
             _ResultRow(
-              label: 'Daily Income',
+              label: l10n.dailyIncome,
               value: 'Rs ${calculation.totalDailyIncome.toStringAsFixed(0)}',
               isHighlight: true,
             ),
             _ResultRow(
-              label: 'Monthly Income (Est.)',
+              label: l10n.monthlyIncomeEst,
               value:
                   'Rs ${(calculation.totalDailyIncome * 30).toStringAsFixed(0)}',
               isHighlight: true,

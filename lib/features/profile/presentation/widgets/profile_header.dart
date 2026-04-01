@@ -19,13 +19,14 @@ class ProfileHeader extends StatelessWidget {
 
   Future<void> _showImagePickerOptions(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
+    final rootContext = context;
     
     showModalBottomSheet(
-      context: context,
+      context: rootContext,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => SafeArea(
+      builder: (sheetContext) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -35,30 +36,18 @@ class ProfileHeader extends StatelessWidget {
                 leading: const Icon(Icons.photo_camera, color: Color(0xFF666B42)),
                 title: Text(l10n.camera),
                 onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(context, ImageSource.camera);
+                  Navigator.pop(sheetContext);
+                  _pickImage(rootContext, ImageSource.camera);
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library, color: Color(0xFF666B42)),
                 title: Text(l10n.gallery),
                 onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(context, ImageSource.gallery);
+                  Navigator.pop(sheetContext);
+                  _pickImage(rootContext, ImageSource.gallery);
                 },
               ),
-              if (user.profilePic != null && user.profilePic!.isNotEmpty)
-                ListTile(
-                  leading: const Icon(Icons.delete, color: Colors.red),
-                  title: Text(
-                    l10n.removePhoto,
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    // TODO: Implement remove photo
-                  },
-                ),
             ],
           ),
         ),
@@ -310,7 +299,7 @@ class ProfileHeader extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    completion < 100 ? l10n.incomplete : l10n.complete,
+                    completion <= 100 ? l10n.complete : l10n.incomplete,
                     style: TextStyle(
                       color: completion < 100
                           ? const Color(0xFFE16000)
