@@ -16,7 +16,7 @@ class AuthProvider extends ChangeNotifier {
   UserModel? _user;
   String? _errorMessage;
   String? _firebaseVerificationId; // for Firebase auth
-  final bool _useFirebaseAuth = false; // Toggle Firebase on/off
+  final bool _useFirebaseAuth = true; // Toggle Firebase on/off - USING FIREBASE DIRECTLY NOW
 
   AuthProvider(this._dataSource, this._storageService);
 
@@ -136,32 +136,25 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // ── Send OTP (Firebase with Fallback) ────────────────────────────────────
+  // ── Send OTP (Firebase Direct) ────────────────────────────────────
   Future<bool> sendOtp(String phoneNumber) async {
     try {
       // Cache phone number for later use
       await _storageService.savePhoneNumber(phoneNumber);
       
-      // Try Firebase first if enabled
-      if (_useFirebaseAuth) {
-        debugPrint('🔥 Attempting Firebase OTP...');
-        final firebaseSuccess = await _sendFirebaseOtp(phoneNumber);
-        if (firebaseSuccess) {
-          debugPrint('✅ Firebase OTP sent successfully');
-          return true;
-        }
-        debugPrint('⚠️ Firebase OTP failed, falling back to hardcoded OTP');
-      }
+      debugPrint('🔥 Sending OTP via Firebase...');
+      final firebaseSuccess = await _sendFirebaseOtp(phoneNumber);
       
-      // Fallback to hardcoded OTP
-      debugPrint('📱 Using hardcoded OTP (123456)');
-      await _dataSource.sendOtp(phoneNumber);
-      _errorMessage = null;
-      return true;
-    } on DioException catch (e) {
-      _errorMessage = _extractDioError(e);
-      notifyListeners();
-      return false;
+      if (firebaseSuccess) {
+        debugPrint('✅ Firebase OTP sent successfully');
+        _errorMessage = null;
+        return true;
+      } else {
+        debugPrint('❌ Firebase OTP failed');
+        _errorMessage = 'Failed to send OTP. Please try again.';
+        notifyListeners();
+        return false;
+      }
     } catch (e) {
       _errorMessage = e.toString();
       notifyListeners();
@@ -206,7 +199,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // ── Verify OTP (Firebase with Fallback) ──────────────────────────────────
+  // ── Verify OTP (Firebase Direct) ──────────────────────────────────
   Future<bool> verifyOtp(String phoneNumber, String otp) async {
     _setLoading();
     try {
@@ -214,77 +207,22 @@ class AuthProvider extends ChangeNotifier {
       debugPrint('Input phone: $phoneNumber');
       debugPrint('Input otp: $otp');
 
-      // Try Firebase verification if we have a verification ID
-      if (_firebaseVerificationId != null) {
-        debugPrint('🔥 Attempting Firebase OTP verification...');
-        final firebaseSuccess = await _verifyFirebaseOtp(otp, phoneNumber);
-        if (firebaseSuccess) {
-          debugPrint('✅ Firebase OTP verified successfully');
-          return true;
-        }
-        debugPrint('⚠️ Firebase verification failed, falling back to hardcoded OTP');
-        // Clear verification ID so we don't try Firebase again
-        _firebaseVerificationId = null;
-      }
-      
-      // Fallback to hardcoded OTP verification
-      debugPrint('📱 Using hardcoded OTP verification');
-      final result = await _dataSource.verifyOtp(phoneNumber, otp);
-      debugPrint('Raw verifyOtp result: $result');
-      debugPrint('Raw verifyOtp keys: ${result.keys.toList()}');
-      final dataObj = result.containsKey('data') ? result['data'] as Map<String, dynamic> : result;
-      debugPrint('Parsed data object: $dataObj');
-      debugPrint('Parsed data object keys: ${dataObj.keys.toList()}');
-      final token = dataObj['token'] as String;
-      final userData = dataObj['user'] as Map<String, dynamic>;
-      debugPrint('✅ Parsed verify-otp token length: ${token.length}');
-      debugPrint('✅ Parsed verify-otp user keys: ${userData.keys.toList()}');
-      debugPrint('✅ Parsed verify-otp user data: $userData');
-
-      // Save token securely
-      await _storageService.saveToken(token);
-      DioClient.instance.setAuthToken(token);
-      
-      // Save refresh token if available
-      if (result.containsKey('refreshToken')) {
-        await _storageService.saveRefreshToken(result['refreshToken'] as String);
-      }
-      
-      // Save user data
-      _user = UserModel.fromJson(userData);
-      await _storageService.saveUser(_user!.toJson());
-      
-      // Cache phone number
-      await _storageService.savePhoneNumber(phoneNumber);
-      
-      // Update auth status
-      await _storageService.saveAuthStatus('authenticated');
-      
-      // Calculate and save profile completion
-      final completion = _calculateProfileCompletion(_user!);
-      await _storageService.setProfileCompletion(completion);
-
-      // Re-initialize notifications with user token
-      try {
-        await NotificationService.instance.initialize(userToken: token);
-      } catch (e) {
-        debugPrint('⚠️ Failed to re-initialize notifications: $e');
+      // Firebase verification is now the primary flow
+      if (_firebaseVerificationId == null) {
+        _setError('No verification ID found. Please request a new OTP.');
+        return false;
       }
 
-      _status = 'authenticated';
-      _errorMessage = null;
-      notifyListeners();
-      debugPrint('════ VERIFY OTP SUCCESS ═════════');
-      return true;
-    } on DioException catch (e) {
-      debugPrint('════ VERIFY OTP DIO ERROR ═══════');
-      debugPrint('Type: ${e.type}');
-      debugPrint('Message: ${e.message}');
-      debugPrint('Status: ${e.response?.statusCode}');
-      debugPrint('Response: ${e.response?.data}');
-      debugPrint('Error object: ${e.error}');
-      _setError(_extractDioError(e));
-      return false;
+      debugPrint('🔥 Verifying OTP with Firebase...');
+      final firebaseSuccess = await _verifyFirebaseOtp(otp, phoneNumber);
+      
+      if (firebaseSuccess) {
+        debugPrint('✅ Firebase OTP verified successfully');
+        return true;
+      } else {
+        _setError('Invalid OTP. Please try again.');
+        return false;
+      }
     } catch (e) {
       debugPrint('════ VERIFY OTP ERROR ═══════════');
       debugPrint('Error: $e');
